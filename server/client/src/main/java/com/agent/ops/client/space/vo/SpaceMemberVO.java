@@ -1,12 +1,10 @@
 package com.agent.ops.client.space.vo;
 
 import com.agent.ops.client.space.enums.SpaceRoleType;
-import lombok.Data;
 
 /**
  * 空间成员视图对象。由应用层基于 Space 的 admin/member 列表 + UserQueryService 装配。
  */
-@Data
 public class SpaceMemberVO {
     /**
      * 用户业务编码。

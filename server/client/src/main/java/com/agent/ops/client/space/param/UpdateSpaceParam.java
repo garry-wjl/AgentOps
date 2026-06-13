@@ -1,14 +1,10 @@
 package com.agent.ops.client.space.param;
 
 import com.agent.ops.facade.request.CommonRequest;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 /**
  * 修改空间基础信息入参。
  */
-@EqualsAndHashCode(callSuper = true)
-@Data
 public class UpdateSpaceParam extends CommonRequest {
     /**
      * 空间业务编码。

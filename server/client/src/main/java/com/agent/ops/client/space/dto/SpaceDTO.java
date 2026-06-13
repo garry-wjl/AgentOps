@@ -1,7 +1,6 @@
 package com.agent.ops.client.space.dto;
 
 import com.agent.ops.client.space.enums.SpaceStatus;
-import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -9,7 +8,6 @@ import java.util.List;
 /**
  * 空间数据传输对象，跨层传递空间快照。
  */
-@Data
 public class SpaceDTO {
     /**
      * 业务编码。

@@ -1,14 +1,10 @@
 package com.agent.ops.client.space.param;
 
 import com.agent.ops.facade.request.CommonRequest;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 /**
  * 删除空间入参，需要确认输入空间名称。
  */
-@EqualsAndHashCode(callSuper = true)
-@Data
 public class DeleteSpaceParam extends CommonRequest {
     /**
      * 空间业务编码。

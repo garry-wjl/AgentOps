@@ -1,13 +1,11 @@
 package com.agent.ops.client.space.vo;
 
-import lombok.Data;
 
 import java.time.LocalDateTime;
 
 /**
  * "我的空间"卡片视图对象。
  */
-@Data
 public class SpaceCardVO {
     /**
      * 业务编码。
