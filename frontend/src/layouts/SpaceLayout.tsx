@@ -14,7 +14,7 @@ import {
   ThunderboltOutlined,
   ToolOutlined,
 } from '@ant-design/icons';
-import { Dropdown, Layout, Menu, Tag, Typography } from 'antd';
+import { Dropdown, Layout, Menu, Tag } from 'antd';
 import type { MenuProps } from 'antd';
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import BrandHeader from '@/layouts/BrandHeader';
@@ -140,6 +140,9 @@ export default function SpaceLayout() {
               <HomeOutlined />
               <span>首页</span>
             </button>
+            <span className="header-breadcrumb-sep" aria-hidden>
+              /
+            </span>
             <Dropdown
               menu={{
                 items: switchItems,
@@ -147,13 +150,10 @@ export default function SpaceLayout() {
               }}
               trigger={['click']}
             >
-              <button type="button" className="space-switch-trigger">
+              <button type="button" className="header-link-button header-link-button--space">
                 <ApartmentOutlined />
                 <span>{space.name}</span>
-                <Typography.Text type="secondary" className="space-switch-num">
-                  {space.num}
-                </Typography.Text>
-                <DownOutlined />
+                <DownOutlined className="header-link-button-arrow" />
               </button>
             </Dropdown>
           </>

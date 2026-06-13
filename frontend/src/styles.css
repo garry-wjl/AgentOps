@@ -447,22 +447,38 @@ body {
   align-items: center;
   gap: 8px;
 }
-/* 顶部条上的「文字 + 图标」链接按钮（如首页） */
+/* 顶部条上的「文字 + 图标」链接按钮（如首页 / 空间切换） */
 .header-link-button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
+  padding: 6px 8px;
   border: 0;
   background: transparent;
   border-radius: 6px;
   color: #1f2329;
   font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
+  line-height: 1;
 }
 .header-link-button:hover {
   background: #f0f4ff;
   color: #1677ff;
+}
+.header-link-button--space {
+  font-weight: 600;
+}
+.header-link-button-arrow {
+  font-size: 11px;
+  color: #8c8c8c;
+  margin-left: 2px;
+}
+.header-breadcrumb-sep {
+  color: #c7ccd4;
+  font-size: 14px;
+  user-select: none;
+  padding: 0 2px;
 }
 .brand-header-right {
   display: flex;
@@ -472,6 +488,7 @@ body {
 }
 
 /* 顶部空间下拉触发器 */
+/* 顶部空间下拉触发器（旧椭圆样式，保留以防其他位置复用，新空间下拉按钮已改用 .header-link-button--space） */
 .space-switch-trigger {
   display: inline-flex;
   align-items: center;
