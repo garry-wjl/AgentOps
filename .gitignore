@@ -35,3 +35,7 @@ Thumbs.db
 # Build
 logs/
 *.log.gz
+# Reference screenshots placed by the user, not source assets
+/image.png
+/image*.png
+/screenshot*.png

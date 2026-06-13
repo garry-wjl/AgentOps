@@ -436,6 +436,34 @@ body {
   display: flex;
   justify-content: center;
 }
+.brand-header-divider {
+  width: 1px;
+  height: 20px;
+  background: #e5e7eb;
+  margin: 0 12px;
+}
+.brand-header-leading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* 顶部条上的「文字 + 图标」链接按钮（如首页） */
+.header-link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 0;
+  background: transparent;
+  border-radius: 6px;
+  color: #1f2329;
+  font-size: 13px;
+  cursor: pointer;
+}
+.header-link-button:hover {
+  background: #f0f4ff;
+  color: #1677ff;
+}
 .brand-header-right {
   display: flex;
   align-items: center;

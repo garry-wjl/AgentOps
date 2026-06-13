@@ -8,6 +8,7 @@ import {
   ExperimentOutlined,
   FileTextOutlined,
   FunctionOutlined,
+  HomeOutlined,
   RobotOutlined,
   TeamOutlined,
   ThunderboltOutlined,
@@ -129,23 +130,33 @@ export default function SpaceLayout() {
     <Layout className="shell-layout">
       <BrandHeader
         onLogoClick={() => navigate('/platform/spaces')}
-        center={
-          <Dropdown
-            menu={{
-              items: switchItems,
-              onClick: ({ key }) => navigate(`/spaces/${key}/dashboard`),
-            }}
-            trigger={['click']}
-          >
-            <button type="button" className="space-switch-trigger">
-              <ApartmentOutlined />
-              <span>{space.name}</span>
-              <Typography.Text type="secondary" className="space-switch-num">
-                {space.num}
-              </Typography.Text>
-              <DownOutlined />
+        leftExtras={
+          <>
+            <button
+              type="button"
+              className="header-link-button"
+              onClick={() => navigate('/platform/spaces')}
+            >
+              <HomeOutlined />
+              <span>首页</span>
             </button>
-          </Dropdown>
+            <Dropdown
+              menu={{
+                items: switchItems,
+                onClick: ({ key }) => navigate(`/spaces/${key}/dashboard`),
+              }}
+              trigger={['click']}
+            >
+              <button type="button" className="space-switch-trigger">
+                <ApartmentOutlined />
+                <span>{space.name}</span>
+                <Typography.Text type="secondary" className="space-switch-num">
+                  {space.num}
+                </Typography.Text>
+                <DownOutlined />
+              </button>
+            </Dropdown>
+          </>
         }
       />
       <Layout className="shell-body">
