@@ -628,6 +628,34 @@ body {
   gap: 10px;
   margin-bottom: 4px;
 }
+.space-card-clickable {
+  cursor: pointer;
+}
+/* 卡片右上角的三点按钮：默认隐藏，hover/focus 卡片或按钮自身时显示 */
+.space-card-more {
+  margin-left: auto;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #4e5969;
+  opacity: 0;
+  transition: opacity 0.18s ease, background 0.18s ease;
+}
+.space-card:hover .space-card-more,
+.space-card-more:focus-visible,
+.space-card-more.ant-dropdown-open {
+  opacity: 1;
+}
+.space-card-more:hover {
+  background: #f0f4ff;
+  color: #1677ff;
+}
 .space-card-icon {
   width: 36px;
   height: 36px;

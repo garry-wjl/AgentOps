@@ -2,6 +2,7 @@ import {
   CrownOutlined,
   DeleteOutlined,
   EditOutlined,
+  MoreOutlined,
   PlusOutlined,
   TeamOutlined,
   UserOutlined,
@@ -12,6 +13,7 @@ import {
   Button,
   Card,
   Drawer,
+  Dropdown,
   Form,
   Input,
   Modal,
@@ -21,6 +23,7 @@ import {
   Typography,
   message,
 } from 'antd';
+import type { MenuProps } from 'antd';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { mockSpaces, type Space as SpaceItem } from '@/mock/spaces';
@@ -129,80 +132,107 @@ export default function SpaceListPage() {
           <PlusOutlined />
           <div>新建空间</div>
         </button>
-        {filtered.map((s) => (
-          <Card key={s.id} className="space-card" hoverable variant="outlined">
-            <div className="space-card-head">
-              <span className="space-card-icon">
-                <CrownOutlined />
-              </span>
-              <div className="space-card-title">
-                <Text strong>{s.name}</Text>
-                <Tag color={s.myRole === 'ADMIN' ? 'blue' : 'green'}>
-                  {s.myRole === 'ADMIN' ? '管理' : '成员'}
-                </Tag>
-              </div>
-            </div>
-            <Paragraph type="secondary" className="space-card-num">
-              {s.num}
-            </Paragraph>
-            <div className="space-card-meta">
-              <Tooltip title="创建人">
-                <Space size={4}>
-                  <UserOutlined /> {s.createdBy}
-                </Space>
-              </Tooltip>
-              <Tooltip title="成员">
-                <Space size={4}>
-                  <TeamOutlined /> {s.admins.length} 管理 / {s.members.length} 成员
-                </Space>
-              </Tooltip>
-            </div>
-            <Paragraph
-              ellipsis={{ rows: 2 }}
-              className="space-card-remark"
-              type="secondary"
+        {filtered.map((s) => {
+          const adminMenu: MenuProps['items'] =
+            s.myRole === 'ADMIN'
+              ? [
+                  {
+                    key: 'edit',
+                    icon: <EditOutlined />,
+                    label: '编辑',
+                  },
+                  {
+                    key: 'delete',
+                    icon: <DeleteOutlined />,
+                    label: '删除',
+                    danger: true,
+                  },
+                ]
+              : [];
+
+          return (
+            <Card
+              key={s.id}
+              className="space-card space-card-clickable"
+              hoverable
+              variant="outlined"
+              onClick={() => navigate(`/spaces/${s.id}/agents`)}
             >
-              {s.remark || '—'}
-            </Paragraph>
-            <div className="space-card-avatars">
-              {[...s.admins, ...s.members].slice(0, 5).map((m) => (
-                <Tooltip key={m.userNum} title={`${m.name} (${m.email})`}>
-                  <Avatar size={28} icon={<UserOutlined />} />
-                </Tooltip>
-              ))}
-              {s.admins.length + s.members.length > 5 && (
-                <Avatar size={28} className="space-card-avatars-more">
-                  +{s.admins.length + s.members.length - 5}
-                </Avatar>
-              )}
-            </div>
-            <div className="space-card-footer">
-              <Button
-                type="primary"
-                onClick={() => navigate(`/spaces/${s.id}/agents`)}
-              >
-                进入空间
-              </Button>
-              {s.myRole === 'ADMIN' && (
-                <>
-                  <Button icon={<EditOutlined />} onClick={() => openEdit(s)}>
-                    编辑
-                  </Button>
-                  <Button
-                    danger
-                    icon={<DeleteOutlined />}
-                    onClick={() => {
-                      setDeleting(s);
-                      setConfirmText('');
+              <div className="space-card-head">
+                <span className="space-card-icon">
+                  <CrownOutlined />
+                </span>
+                <div className="space-card-title">
+                  <Text strong>{s.name}</Text>
+                  <Tag color={s.myRole === 'ADMIN' ? 'blue' : 'green'}>
+                    {s.myRole === 'ADMIN' ? '管理' : '成员'}
+                  </Tag>
+                </div>
+                {adminMenu.length > 0 && (
+                  <Dropdown
+                    trigger={['hover', 'click']}
+                    placement="bottomRight"
+                    menu={{
+                      items: adminMenu,
+                      onClick: ({ key, domEvent }) => {
+                        domEvent.stopPropagation();
+                        if (key === 'edit') {
+                          openEdit(s);
+                        } else if (key === 'delete') {
+                          setDeleting(s);
+                          setConfirmText('');
+                        }
+                      },
                     }}
                   >
-                    删除
-                  </Button>
-                </>
-              )}
-            </div>
-          </Card>
-        ))}
+                    <button
+                      type="button"
+                      className="space-card-more"
+                      onClick={(e) => e.stopPropagation()}
+                      aria-label="更多操作"
+                    >
+                      <MoreOutlined />
+                    </button>
+                  </Dropdown>
+                )}
+              </div>
+              <Paragraph type="secondary" className="space-card-num">
+                {s.num}
+              </Paragraph>
+              <div className="space-card-meta">
+                <Tooltip title="创建人">
+                  <Space size={4}>
+                    <UserOutlined /> {s.createdBy}
+                  </Space>
+                </Tooltip>
+                <Tooltip title="成员">
+                  <Space size={4}>
+                    <TeamOutlined /> {s.admins.length} 管理 / {s.members.length} 成员
+                  </Space>
+                </Tooltip>
+              </div>
+              <Paragraph
+                ellipsis={{ rows: 2 }}
+                className="space-card-remark"
+                type="secondary"
+              >
+                {s.remark || '—'}
+              </Paragraph>
+              <div className="space-card-avatars">
+                {[...s.admins, ...s.members].slice(0, 5).map((m) => (
+                  <Tooltip key={m.userNum} title={`${m.name} (${m.email})`}>
+                    <Avatar size={28} icon={<UserOutlined />} />
+                  </Tooltip>
+                ))}
+                {s.admins.length + s.members.length > 5 && (
+                  <Avatar size={28} className="space-card-avatars-more">
+                    +{s.admins.length + s.members.length - 5}
+                  </Avatar>
+                )}
+              </div>
+            </Card>
+          );
+        })}
       </div>
 
       <Drawer
