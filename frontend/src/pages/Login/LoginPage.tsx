@@ -82,7 +82,7 @@ export default function LoginPage() {
               try {
                 await login(account, password);
                 message.success('登录成功');
-                const from = (location.state as { from?: string } | null)?.from || '/spaces';
+                const from = (location.state as { from?: string } | null)?.from || '/platform/spaces';
                 navigate(from, { replace: true });
                 return true;
               } catch (error) {

@@ -9,7 +9,7 @@ export default function ForbiddenPage() {
       title="无权限访问该功能"
       subTitle="普通用户不能使用用户管理和系统设置功能。"
       extra={
-        <Button type="primary" onClick={() => navigate('/spaces')}>
+        <Button type="primary" onClick={() => navigate('/platform/spaces')}>
           返回空间管理
         </Button>
       }
