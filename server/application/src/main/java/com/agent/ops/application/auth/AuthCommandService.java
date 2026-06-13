@@ -3,6 +3,7 @@ package com.agent.ops.application.auth;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
 import com.agent.ops.application.user.UserQueryService;
+import com.agent.ops.client.user.dto.CurrentUserDTO;
 import com.agent.ops.client.user.dto.LoginParamDTO;
 import com.agent.ops.client.user.dto.LoginResultDTO;
 import com.agent.ops.client.user.dto.LogoutParamDTO;
@@ -68,6 +69,15 @@ public class AuthCommandService {
         result.accessToken = tokenProvider.createAccessToken(user.id, user.num);
         result.tokenType = "Bearer";
         result.expiresIn = 7200L;
+        // 装配当前登录用户信息，避免前端拿不到 user 字段后陷入加载态
+        CurrentUserDTO currentUser = new CurrentUserDTO();
+        currentUser.id = user.id;
+        currentUser.num = user.num;
+        currentUser.name = user.name;
+        currentUser.email = user.email;
+        currentUser.phone = user.phone;
+        currentUser.roles = user.roles;
+        result.user = currentUser;
         return result;
     }
 

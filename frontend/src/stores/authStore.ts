@@ -27,7 +27,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   async login(account, password) {
     const result = await loginApi(account, password);
     setAccessToken(result.accessToken);
-    set({ token: result.accessToken, currentUser: result.user, initialized: true });
+    set({ token: result.accessToken, currentUser: result.user ?? null, initialized: true });
+    // 后端理论上会下发 user，缺失时主动补一次 /auth/current，避免守卫陷入加载态
+    if (!result.user) {
+      const fetched = await get().fetchCurrent();
+      return fetched as CurrentUserVO;
+    }
     return result.user;
   },
 
