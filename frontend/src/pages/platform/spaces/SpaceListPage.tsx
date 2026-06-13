@@ -179,7 +179,7 @@ export default function SpaceListPage() {
             <div className="space-card-footer">
               <Button
                 type="primary"
-                onClick={() => navigate(`/spaces/${s.id}/dashboard`)}
+                onClick={() => navigate(`/spaces/${s.id}/agents`)}
               >
                 进入空间
               </Button>

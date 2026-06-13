@@ -3,7 +3,6 @@ import {
   ApiOutlined,
   ApartmentOutlined,
   CodeOutlined,
-  DashboardOutlined,
   DownOutlined,
   ExperimentOutlined,
   FileTextOutlined,
@@ -24,7 +23,7 @@ const { Sider, Content } = Layout;
 
 /**
  * 空间 Shell：顶部 Logo + 当前空间下拉（切换空间）+ 用户菜单；
- * 左侧分组：工作台 / Agent 与沙箱 / 模型与工具 / 调试与评测 / 空间成员（仅管理员）。
+ * 左侧分组：Agent 与沙箱 / 模型与工具 / 调试与评测 / 空间成员（仅管理员）。
  */
 export default function SpaceLayout() {
   const navigate = useNavigate();
@@ -33,12 +32,6 @@ export default function SpaceLayout() {
   const space = findSpace(spaceId) ?? mockSpaces[0];
 
   const items: MenuProps['items'] = [
-    {
-      key: `/spaces/${spaceId}/dashboard`,
-      icon: <DashboardOutlined />,
-      label: '工作台',
-    },
-    { type: 'divider' },
     {
       key: 'group-agent',
       type: 'group',
@@ -129,13 +122,13 @@ export default function SpaceLayout() {
   return (
     <Layout className="shell-layout">
       <BrandHeader
-        onLogoClick={() => navigate('/platform/spaces')}
+        onLogoClick={() => navigate('/platform/workbench')}
         leftExtras={
           <>
             <button
               type="button"
               className="header-link-button"
-              onClick={() => navigate('/platform/spaces')}
+              onClick={() => navigate('/platform/workbench')}
             >
               <HomeOutlined />
               <span>首页</span>
@@ -146,7 +139,7 @@ export default function SpaceLayout() {
             <Dropdown
               menu={{
                 items: switchItems,
-                onClick: ({ key }) => navigate(`/spaces/${key}/dashboard`),
+                onClick: ({ key }) => navigate(`/spaces/${key}/agents`),
               }}
               trigger={['click']}
             >

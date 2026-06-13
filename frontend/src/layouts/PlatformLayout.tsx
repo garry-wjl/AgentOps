@@ -1,5 +1,6 @@
 import {
   ApartmentOutlined,
+  DashboardOutlined,
   SettingOutlined,
   TeamOutlined,
 } from '@ant-design/icons';
@@ -11,7 +12,8 @@ import { hasAdminRole, useAuthStore } from '@/stores/authStore';
 const { Sider, Content } = Layout;
 
 /**
- * 平台 Shell：顶部 Logo + 用户菜单；左侧 = 空间管理 / 用户管理（仅管理员）/ 系统设置（仅管理员）。
+ * 平台 Shell：顶部 Logo + 用户菜单；
+ * 左侧 = 工作台 / 空间管理 / 用户管理（仅管理员）/ 系统设置（仅管理员）。
  */
 export default function PlatformLayout() {
   const navigate = useNavigate();
@@ -21,6 +23,7 @@ export default function PlatformLayout() {
   const admin = hasAdminRole(currentUser);
 
   const items = [
+    { key: '/platform/workbench', icon: <DashboardOutlined />, label: '工作台' },
     { key: '/platform/spaces', icon: <ApartmentOutlined />, label: '空间管理' },
     ...(admin
       ? [
@@ -31,11 +34,13 @@ export default function PlatformLayout() {
   ];
 
   // 把 /platform/users/xxx 之类的子路径回归到一级 key
-  const selectedKey = items.find((i) => location.pathname.startsWith(i.key))?.key;
+  const selectedKey = items
+    .filter((i) => location.pathname.startsWith(i.key))
+    .sort((a, b) => b.key.length - a.key.length)[0]?.key;
 
   return (
     <Layout className="shell-layout">
-      <BrandHeader onLogoClick={() => navigate('/platform/spaces')} />
+      <BrandHeader onLogoClick={() => navigate('/platform/workbench')} />
       <Layout className="shell-body">
         <Sider width={208} className="shell-sider" theme="light">
           <Menu
