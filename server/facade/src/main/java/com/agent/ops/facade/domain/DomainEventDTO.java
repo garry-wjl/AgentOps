@@ -38,9 +38,9 @@ public class DomainEventDTO {
     private LocalDateTime occurredAt;
 
     /**
-     * 触发事件的操作人标识。
+     * 触发事件的操作人业务编码。
      */
-    private Long operatorId;
+    private String operatorCode;
 
     /**
      * 事件特有的业务载荷。
@@ -85,12 +85,12 @@ public class DomainEventDTO {
     }
 
     /**
-     * 返回operatorId。
+     * 返回operatorCode。
      *
-     * @return operatorId
+     * @return operatorCode
      */
-    public Long getOperatorId() {
-        return operatorId;
+    public String getOperatorCode() {
+        return operatorCode;
     }
 
     /**
@@ -139,12 +139,12 @@ public class DomainEventDTO {
     }
 
     /**
-     * 设置operatorId。
+     * 设置operatorCode。
      *
-     * @param operatorId operatorId
+     * @param operatorCode operatorCode
      */
-    public void setOperatorId(Long operatorId) {
-        this.operatorId = operatorId;
+    public void setOperatorCode(String operatorCode) {
+        this.operatorCode = operatorCode;
     }
 
     /**

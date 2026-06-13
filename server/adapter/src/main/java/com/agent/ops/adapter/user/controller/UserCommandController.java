@@ -48,7 +48,7 @@ public class UserCommandController extends BaseController {
         dto.name = param.name;
         dto.roles = param.roles;
         dto.remark = param.remark;
-        dto.operatorId = getCurrentUserId();
+        dto.operatorCode = getCurrentUserCode();
         UserDTO result = userCommandService.create(dto);
         return Result.ok(toUserVO(result));
     }
@@ -68,7 +68,7 @@ public class UserCommandController extends BaseController {
         dto.name = param.name;
         dto.roles = param.roles;
         dto.remark = param.remark;
-        dto.operatorId = getCurrentUserId();
+        dto.operatorCode = getCurrentUserCode();
         UserDTO result = userCommandService.save(dto);
         return Result.ok(toUserVO(result));
     }
@@ -83,7 +83,7 @@ public class UserCommandController extends BaseController {
     public Result<Boolean> submit(@RequestBody @Valid UserActionParam param) {
         UserActionParamDTO dto = new UserActionParamDTO();
         dto.userNum = param.userNum;
-        dto.operatorId = getCurrentUserId();
+        dto.operatorCode = getCurrentUserCode();
         userCommandService.submit(dto);
         return Result.ok(Boolean.TRUE);
     }
@@ -98,7 +98,7 @@ public class UserCommandController extends BaseController {
     public Result<Boolean> delete(@RequestBody @Valid UserActionParam param) {
         UserActionParamDTO dto = new UserActionParamDTO();
         dto.userNum = param.userNum;
-        dto.operatorId = getCurrentUserId();
+        dto.operatorCode = getCurrentUserCode();
         userCommandService.delete(dto);
         return Result.ok(Boolean.TRUE);
     }
@@ -113,7 +113,7 @@ public class UserCommandController extends BaseController {
     public Result<Boolean> enable(@RequestBody @Valid UserActionParam param) {
         UserActionParamDTO dto = new UserActionParamDTO();
         dto.userNum = param.userNum;
-        dto.operatorId = getCurrentUserId();
+        dto.operatorCode = getCurrentUserCode();
         userCommandService.enable(dto);
         return Result.ok(Boolean.TRUE);
     }
@@ -128,7 +128,7 @@ public class UserCommandController extends BaseController {
     public Result<Boolean> disable(@RequestBody @Valid UserActionParam param) {
         UserActionParamDTO dto = new UserActionParamDTO();
         dto.userNum = param.userNum;
-        dto.operatorId = getCurrentUserId();
+        dto.operatorCode = getCurrentUserCode();
         userCommandService.disable(dto);
         return Result.ok(Boolean.TRUE);
     }
@@ -145,7 +145,7 @@ public class UserCommandController extends BaseController {
         dto.userNum = param.userNum;
         dto.newPassword = param.newPassword;
         dto.confirmPassword = param.confirmPassword;
-        dto.operatorId = getCurrentUserId();
+        dto.operatorCode = getCurrentUserCode();
         userCommandService.resetPassword(dto);
         return Result.ok(Boolean.TRUE);
     }
@@ -161,7 +161,7 @@ public class UserCommandController extends BaseController {
         AssignUserRolesParamDTO dto = new AssignUserRolesParamDTO();
         dto.userNum = param.userNum;
         dto.roles = param.roles;
-        dto.operatorId = getCurrentUserId();
+        dto.operatorCode = getCurrentUserCode();
         UserDTO result = userCommandService.assignRoles(dto);
         return Result.ok(toUserVO(result));
     }

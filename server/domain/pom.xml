@@ -20,5 +20,9 @@
             <groupId>com.agent.ops</groupId>
             <artifactId>facade</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.agent.ops</groupId>
+            <artifactId>client</artifactId>
+        </dependency>
     </dependencies>
 </project>

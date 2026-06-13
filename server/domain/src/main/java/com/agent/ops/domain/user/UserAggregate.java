@@ -98,12 +98,12 @@ public class UserAggregate extends DomainEntity {
     /**
      * 保存用户聚合，常用于创建空草稿或持久化当前聚合状态。
      *
-     * @param operatorId 当前操作人标识
+     * @param operatorCode 当前操作人标识
      */
     @Override
-    public void save(Long operatorId) {
+    public void save(String operatorCode) {
         // 1. 初始化对象。
-        initialize(operatorId);
+        initialize(operatorCode);
         // 2. 领域规则校验。
         assertCollaboratorsReady();
         // 3. 赋值：初始化默认值、生成业务编码，并在资料已填写时校验资料唯一性。
@@ -115,18 +115,18 @@ public class UserAggregate extends DomainEntity {
         // 5. 持久化对象：新增和更新统一调用 save。
         userRepository.save(this);
         // 6. 发布领域事件：每次保存都发布保存事件。
-        publishEvent(DomainEventConstant.USER_SAVED, operatorId);
+        publishEvent(DomainEventConstant.USER_SAVED, operatorCode);
     }
 
     /**
      * 删除草稿态用户。
      *
-     * @param operatorId 当前操作人标识
+     * @param operatorCode 当前操作人标识
      */
     @Override
-    public void delete(Long operatorId) {
+    public void delete(String operatorCode) {
         // 1. 初始化对象。
-        initialize(operatorId);
+        initialize(operatorCode);
         // 2. 领域规则校验。
         assertCollaboratorsReady();
         Assert.isTrue(UserStatus.DRAFT == status, "仅草稿态用户允许删除");
@@ -136,17 +136,17 @@ public class UserAggregate extends DomainEntity {
         // 5. 持久化对象：删除操作按仓储三方法契约调用 deleteByNum。
         userRepository.deleteByNum(getNum());
         // 6. 发布领域事件。
-        publishEvent(DomainEventConstant.USER_DELETED, operatorId);
+        publishEvent(DomainEventConstant.USER_DELETED, operatorCode);
     }
 
     /**
      * 将草稿态用户提交为启用态用户。
      *
-     * @param operatorId 当前操作人标识
+     * @param operatorCode 当前操作人标识
      */
-    public void submit(Long operatorId) {
+    public void submit(String operatorCode) {
         // 1. 初始化对象。
-        initialize(operatorId);
+        initialize(operatorCode);
         // 2. 领域规则校验。
         assertCollaboratorsReady();
         Assert.isTrue(UserStatus.DRAFT == status, "仅草稿态用户允许提交");
@@ -158,17 +158,17 @@ public class UserAggregate extends DomainEntity {
         // 5. 持久化对象。
         userRepository.save(this);
         // 6. 发布领域事件。
-        publishEvent(DomainEventConstant.USER_SUBMITTED, operatorId);
+        publishEvent(DomainEventConstant.USER_SUBMITTED, operatorCode);
     }
 
     /**
      * 启用禁用态用户。
      *
-     * @param operatorId 当前操作人标识
+     * @param operatorCode 当前操作人标识
      */
-    public void enable(Long operatorId) {
+    public void enable(String operatorCode) {
         // 1. 初始化对象。
-        initialize(operatorId);
+        initialize(operatorCode);
         // 2. 领域规则校验。
         assertCollaboratorsReady();
         Assert.isTrue(UserStatus.DISABLED == status, "仅禁用态用户允许启用");
@@ -179,17 +179,17 @@ public class UserAggregate extends DomainEntity {
         // 5. 持久化对象。
         userRepository.save(this);
         // 6. 发布领域事件。
-        publishEvent(DomainEventConstant.USER_ENABLED, operatorId);
+        publishEvent(DomainEventConstant.USER_ENABLED, operatorCode);
     }
 
     /**
      * 禁用启用态用户。
      *
-     * @param operatorId 当前操作人标识
+     * @param operatorCode 当前操作人标识
      */
-    public void disable(Long operatorId) {
+    public void disable(String operatorCode) {
         // 1. 初始化对象。
-        initialize(operatorId);
+        initialize(operatorCode);
         // 2. 领域规则校验。
         assertCollaboratorsReady();
         Assert.isTrue(UserStatus.ENABLED == status, "仅启用态用户允许禁用");
@@ -200,41 +200,41 @@ public class UserAggregate extends DomainEntity {
         // 5. 持久化对象。
         userRepository.save(this);
         // 6. 发布领域事件。
-        publishEvent(DomainEventConstant.USER_DISABLED, operatorId);
+        publishEvent(DomainEventConstant.USER_DISABLED, operatorCode);
     }
 
     /**
      * 重置启用或禁用用户的密码凭证。
      *
      * @param passwordHash 新密码哈希值
-     * @param operatorId 当前操作人标识
+     * @param operatorCode 当前操作人标识
      */
-    public void resetPassword(String passwordHash, Long operatorId) {
+    public void resetPassword(String passwordHash, String operatorCode) {
         // 1. 初始化对象。
-        initialize(operatorId);
+        initialize(operatorCode);
         // 2. 领域规则校验。
         assertCollaboratorsReady();
         Assert.isTrue(UserStatus.DRAFT != status, "草稿态用户不允许重置密码");
         // 3. 赋值：重置密码凭证。
         initializeDefaults();
-        this.credential.reset(passwordHash, operatorId);
+        this.credential.reset(passwordHash, operatorCode);
         // 4. 领域完整性校验。
         validate();
         // 5. 持久化对象。
         userRepository.save(this);
         // 6. 发布领域事件。
-        publishEvent(DomainEventConstant.USER_PASSWORD_RESET, operatorId);
+        publishEvent(DomainEventConstant.USER_PASSWORD_RESET, operatorCode);
     }
 
     /**
      * 为草稿态或启用态用户分配平台角色。
      *
      * @param roles 平台角色列表
-     * @param operatorId 当前操作人标识
+     * @param operatorCode 当前操作人标识
      */
-    public void assignRoles(List<UserRole> roles, Long operatorId) {
+    public void assignRoles(List<UserRole> roles, String operatorCode) {
         // 1. 初始化对象。
-        initialize(operatorId);
+        initialize(operatorCode);
         // 2. 领域规则校验。
         assertCollaboratorsReady();
         Assert.isTrue(UserStatus.DRAFT == status || UserStatus.ENABLED == status, "仅草稿态或启用态用户允许分配角色");
@@ -246,7 +246,7 @@ public class UserAggregate extends DomainEntity {
         // 5. 持久化对象。
         userRepository.save(this);
         // 6. 发布领域事件。
-        publishEvent(DomainEventConstant.USER_ROLES_ASSIGNED, operatorId);
+        publishEvent(DomainEventConstant.USER_ROLES_ASSIGNED, operatorCode);
     }
 
     /**
@@ -371,15 +371,15 @@ public class UserAggregate extends DomainEntity {
      * 发布本次领域操作对应的单个领域事件。
      *
      * @param eventType 领域事件类型
-     * @param operatorId 当前操作人标识
+     * @param operatorCode 当前操作人标识
      */
-    private void publishEvent(String eventType, Long operatorId) {
+    private void publishEvent(String eventType, String operatorCode) {
         DomainEventDTO event = new DomainEventDTO();
         event.setEventId(IdUtil.fastSimpleUUID());
         event.setEventType(eventType);
         event.setBusinessNum(getNum());
         event.setOccurredAt(LocalDateTimeUtil.now());
-        event.setOperatorId(operatorId);
+        event.setOperatorCode(operatorCode);
         event.setPayload(this);
         this.domainEventPublisher.publish(event);
     }

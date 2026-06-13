@@ -24,11 +24,6 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
     private UserMapper userMapper;
 
     /**
-     * 存储操作人标识的请求属性名称。
-     */
-    private static final String ATTR_OPERATOR_ID = "operatorId";
-
-    /**
      * 请求处理前校验管理员角色。
      *
      * @param request  HTTP 请求
@@ -38,25 +33,18 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
      */
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        Object attr = request.getAttribute(ATTR_OPERATOR_ID);
-        if (!(attr instanceof Long operatorId)) {
+        Object attr = request.getAttribute(TokenAuthInterceptor.ATTR_CURRENT_USER_CODE);
+        if (!(attr instanceof String currentUserCode) || StrUtil.isBlank(currentUserCode)) {
             throw new BusinessException("ACCESS_DENIED", "无权限访问该功能");
         }
-        UserEntity entity = userMapper.selectById(operatorId);
-        if (entity == null || InfraConstant.NOT_DELETED != nullSafe(entity.isDeleted)
-                || StrUtil.isBlank(entity.roles) || !entity.roles.contains("ADMIN")) {
+        LambdaQueryWrapper<UserEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserEntity::getNum, currentUserCode)
+                .eq(UserEntity::getIsDeleted, InfraConstant.NOT_DELETED)
+                .last("limit 1");
+        UserEntity entity = userMapper.selectOne(wrapper);
+        if (entity == null || StrUtil.isBlank(entity.roles) || !entity.roles.contains("ADMIN")) {
             throw new BusinessException("ACCESS_DENIED", "无权限访问该功能");
         }
         return true;
-    }
-
-    /**
-     * 将空整数转换为默认假值。
-     *
-     * @param value 待转换整数
-     * @return 非空整数
-     */
-    private int nullSafe(Integer value) {
-        return value == null ? InfraConstant.FALSE_VALUE : value;
     }
 }

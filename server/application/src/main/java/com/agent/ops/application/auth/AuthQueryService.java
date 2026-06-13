@@ -27,8 +27,8 @@ public class AuthQueryService {
      */
     public CurrentUserDTO current(CurrentUserParamDTO param) {
         Assert.notNull(param, "当前用户查询参数不能为空");
-        Assert.notNull(param.operatorId, "操作人不能为空");
-        UserDTO user = userQueryService.getById(param.operatorId);
+        Assert.notBlank(param.operatorCode, "操作人不能为空");
+        UserDTO user = userQueryService.getByNum(param.operatorCode);
         if (user == null) {
             return null;
         }

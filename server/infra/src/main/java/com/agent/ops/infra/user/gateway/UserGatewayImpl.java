@@ -173,13 +173,17 @@ public class UserGatewayImpl implements UserGateway {
     /**
      * 校验操作人是否具备管理员角色。
      *
-     * @param operatorId 操作人标识
+     * @param operatorCode 操作人业务编码
      */
     @Override
-    public void assertAdmin(Long operatorId) {
-        Assert.notNull(operatorId, "操作人不能为空");
-        UserEntity entity = userMapper.selectById(operatorId);
-        if (entity == null || InfraConstant.NOT_DELETED != nullSafe(entity.isDeleted) || StrUtil.isBlank(entity.roles)
+    public void assertAdmin(String operatorCode) {
+        Assert.notBlank(operatorCode, "操作人不能为空");
+        LambdaQueryWrapper<UserEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserEntity::getNum, operatorCode)
+                .eq(UserEntity::getIsDeleted, InfraConstant.NOT_DELETED)
+                .last("limit 1");
+        UserEntity entity = userMapper.selectOne(wrapper);
+        if (entity == null || StrUtil.isBlank(entity.roles)
                 || !entity.roles.contains(UserRole.ADMIN_CODE)) {
             throw new BusinessException("ACCESS_DENIED", "无权限访问该功能");
         }

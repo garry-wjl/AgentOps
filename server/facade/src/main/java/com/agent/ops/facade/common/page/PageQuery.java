@@ -57,4 +57,22 @@ public class PageQuery {
         }
         return Math.min(pageSize, MAX_PAGE_SIZE);
     }
+
+    /**
+     * 设置请求页码。
+     *
+     * @param pageNo 请求页码
+     */
+    public void setPageNo(Integer pageNo) {
+        this.pageNo = pageNo;
+    }
+
+    /**
+     * 设置请求每页记录数。
+     *
+     * @param pageSize 请求每页记录数
+     */
+    public void setPageSize(Integer pageSize) {
+        this.pageSize = pageSize;
+    }
 }

@@ -84,13 +84,13 @@ public class UserEntity {
      * 创建操作人标识。
      */
     @TableField("create_no")
-    public Long createNo;
+    public String createNo;
 
     /**
      * 更新操作人标识。
      */
     @TableField("update_no")
-    public Long updateNo;
+    public String updateNo;
 
     /**
      * 创建时间，精确到毫秒。
@@ -222,7 +222,7 @@ public class UserEntity {
      *
      * @return updateNo
      */
-    public Long getUpdateNo() {
+    public String getUpdateNo() {
         return updateNo;
     }
 
@@ -231,7 +231,7 @@ public class UserEntity {
      *
      * @return createNo
      */
-    public Long getCreateNo() {
+    public String getCreateNo() {
         return createNo;
     }
 

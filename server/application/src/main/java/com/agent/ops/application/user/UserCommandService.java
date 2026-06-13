@@ -60,7 +60,7 @@ public class UserCommandService {
     public UserDTO create(UserCreateParamDTO param) {
         Assert.notNull(param, "创建用户参数不能为空");
         UserAggregate user = userFactory.create(param.email, param.phone, param.name, toRoles(param.roles), param.remark);
-        user.save(param.operatorId);
+        user.save(param.operatorCode);
         return toUserDTO(user);
     }
 
@@ -79,7 +79,7 @@ public class UserCommandService {
         user.setName(param.name);
         user.setRoles(toRoles(param.roles));
         user.setRemark(param.remark);
-        user.save(param.operatorId);
+        user.save(param.operatorCode);
         return toUserDTO(user);
     }
 
@@ -91,7 +91,7 @@ public class UserCommandService {
     @Transactional(rollbackFor = Exception.class)
     public void submit(UserActionParamDTO param) {
         UserAggregate user = loadUser(param.userNum);
-        user.submit(param.operatorId);
+        user.submit(param.operatorCode);
     }
 
     /**
@@ -102,7 +102,7 @@ public class UserCommandService {
     @Transactional(rollbackFor = Exception.class)
     public void delete(UserActionParamDTO param) {
         UserAggregate user = loadUser(param.userNum);
-        user.delete(param.operatorId);
+        user.delete(param.operatorCode);
     }
 
     /**
@@ -113,7 +113,7 @@ public class UserCommandService {
     @Transactional(rollbackFor = Exception.class)
     public void enable(UserActionParamDTO param) {
         UserAggregate user = loadUser(param.userNum);
-        user.enable(param.operatorId);
+        user.enable(param.operatorCode);
     }
 
     /**
@@ -124,7 +124,7 @@ public class UserCommandService {
     @Transactional(rollbackFor = Exception.class)
     public void disable(UserActionParamDTO param) {
         UserAggregate user = loadUser(param.userNum);
-        user.disable(param.operatorId);
+        user.disable(param.operatorCode);
     }
 
     /**
@@ -138,7 +138,7 @@ public class UserCommandService {
         passwordEncryptor.validatePasswordPolicy(param.newPassword, param.confirmPassword);
         String passwordHash = passwordEncryptor.hash(param.newPassword);
         UserAggregate user = loadUser(param.userNum);
-        user.resetPassword(passwordHash, param.operatorId);
+        user.resetPassword(passwordHash, param.operatorCode);
         tokenProvider.revokeUserTokens(param.userNum);
     }
 
@@ -152,7 +152,7 @@ public class UserCommandService {
     public UserDTO assignRoles(AssignUserRolesParamDTO param) {
         Assert.notNull(param, "分配角色参数不能为空");
         UserAggregate user = loadUser(param.userNum);
-        user.assignRoles(toRoles(param.roles), param.operatorId);
+        user.assignRoles(toRoles(param.roles), param.operatorCode);
         return toUserDTO(user);
     }
 

@@ -32,5 +32,5 @@ public class UserPageParamDTO {
     /**
      * 操作人标识。
      */
-    public Long operatorId;
+    public String operatorCode;
 }

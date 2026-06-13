@@ -31,7 +31,7 @@ public class AuthQueryController extends BaseController {
     @GetMapping("/current")
     public Result<CurrentUserVO> current() {
         CurrentUserParamDTO param = new CurrentUserParamDTO();
-        param.operatorId = getCurrentUserId();
+        param.operatorCode = getCurrentUserCode();
         // 调用应用服务
         CurrentUserDTO dto = authQueryService.current(param);
         // Application DTO → VO

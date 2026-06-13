@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
- * 访问令牌解析拦截器，从 Authorization 头解析 Bearer token，将 operatorId 写入请求属性。
+ * 访问令牌解析拦截器，从 Authorization 头解析 Bearer token，将当前用户业务编码写入请求属性。
  */
 @Component
 public class TokenAuthInterceptor implements HandlerInterceptor {
@@ -20,9 +20,9 @@ public class TokenAuthInterceptor implements HandlerInterceptor {
     private TokenProvider tokenProvider;
 
     /**
-     * 存储操作人标识的请求属性名称。
+     * 存储当前用户业务编码的请求属性名称。
      */
-    private static final String ATTR_OPERATOR_ID = "operatorId";
+    public static final String ATTR_CURRENT_USER_CODE = "currentUserCode";
 
     /**
      * Authorization 头前缀。
@@ -44,9 +44,9 @@ public class TokenAuthInterceptor implements HandlerInterceptor {
             return true;
         }
         String token = header.substring(BEARER_PREFIX.length()).trim();
-        Long userId = tokenProvider.resolveUserId(token);
-        if (userId != null) {
-            request.setAttribute(ATTR_OPERATOR_ID, userId);
+        String userCode = tokenProvider.resolveUserCode(token);
+        if (StrUtil.isNotBlank(userCode)) {
+            request.setAttribute(ATTR_CURRENT_USER_CODE, userCode);
         }
         return true;
     }
