@@ -267,7 +267,7 @@ export default function SpaceListPage() {
                 </Tooltip>
               </div>
               <Paragraph
-                ellipsis={{ rows: 2 }}
+                ellipsis={{ rows: 1 }}
                 className="space-card-remark"
                 type="secondary"
               >
