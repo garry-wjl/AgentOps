@@ -77,9 +77,8 @@ function UserMenu({ currentUser, onLogout }: UserMenuProps) {
         </div>
       )}
     >
-      <button className="user-profile-trigger" type="button">
+      <button className="user-profile-trigger" type="button" aria-label={currentUser.name}>
         <Avatar size={32} icon={<UserOutlined />} />
-        <span className="user-profile-name">{currentUser.name}</span>
       </button>
     </Dropdown>
   );

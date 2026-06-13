@@ -476,16 +476,19 @@ body {
   min-width: 220px;
 }
 
-/* 用户菜单 */
+/* 用户菜单 —— 顶部右侧仅显示头像图标 */
 .user-profile-trigger {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 10px 4px 4px;
-  border-radius: 999px;
+  justify-content: center;
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   border: 1px solid transparent;
   background: transparent;
   cursor: pointer;
+  margin-left: auto; /* 兜底：保证总是贴右 */
 }
 .user-profile-trigger:hover {
   background: #f0f4ff;
