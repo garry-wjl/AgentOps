@@ -7,7 +7,6 @@ import {
   CodeOutlined,
   ExclamationCircleOutlined,
   FileTextOutlined,
-  PlusOutlined,
   RobotOutlined,
   ThunderboltOutlined,
   ToolOutlined,
@@ -59,14 +58,6 @@ export default function PlatformWorkbenchPage() {
             你共参与 <Text strong>{spaceCount}</Text> 个空间，其中 <Text strong>{adminSpaceCount}</Text> 个为管理员
           </Paragraph>
         </div>
-        <Space>
-          <Button icon={<PlusOutlined />} onClick={() => navigate('/platform/spaces')}>
-            新建空间
-          </Button>
-          <Button type="primary" onClick={() => navigate('/platform/spaces')}>
-            浏览全部空间 <ArrowRightOutlined />
-          </Button>
-        </Space>
       </div>
 
       {/* 跨空间统计卡 */}
