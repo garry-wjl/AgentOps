@@ -215,12 +215,12 @@ body {
 .user-profile-trigger {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  min-width: 132px;
-  height: 40px;
-  padding: 4px 10px 4px 6px;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: 50%;
   background: transparent;
   cursor: pointer;
   transition: background 0.18s ease, border-color 0.18s ease;
@@ -234,13 +234,6 @@ body {
 .user-profile-avatar {
   background: linear-gradient(135deg, #1664ff 0%, #00a3ff 100%);
   box-shadow: 0 4px 12px rgba(22, 100, 255, 0.24);
-}
-
-.user-profile-trigger-text {
-  display: grid;
-  gap: 2px;
-  text-align: left;
-  line-height: 1.1;
 }
 
 .user-profile-name {
@@ -404,6 +397,7 @@ body {
 .brand-header {
   display: flex;
   align-items: center;
+  width: 100%;
   height: 56px;
   padding: 0 20px;
   background: #ffffff;
@@ -446,6 +440,7 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
+  margin-left: auto; /* 没有 center 占位时也保证贴最右 */
 }
 
 /* 顶部空间下拉触发器 */
@@ -476,7 +471,7 @@ body {
   min-width: 220px;
 }
 
-/* 用户菜单 —— 顶部右侧仅显示头像图标 */
+/* 用户菜单 —— 顶部右侧仅显示头像图标（贴右由 .brand-header-right 容器负责） */
 .user-profile-trigger {
   display: inline-flex;
   align-items: center;
@@ -488,7 +483,6 @@ body {
   border: 1px solid transparent;
   background: transparent;
   cursor: pointer;
-  margin-left: auto; /* 兜底：保证总是贴右 */
 }
 .user-profile-trigger:hover {
   background: #f0f4ff;
