@@ -2,14 +2,13 @@ import {
   CrownOutlined,
   DeleteOutlined,
   EditOutlined,
-  MoreOutlined,
+  EllipsisOutlined,
   PlusOutlined,
   TeamOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 import {
   Alert,
-  Avatar,
   Button,
   Card,
   Drawer,
@@ -17,6 +16,7 @@ import {
   Form,
   Input,
   Modal,
+  Select,
   Space,
   Tag,
   Tooltip,
@@ -26,9 +26,15 @@ import {
 import type { MenuProps } from 'antd';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { mockSpaces, type Space as SpaceItem } from '@/mock/spaces';
+import { mockSpaces, type Space as SpaceItem, type SpaceMember } from '@/mock/spaces';
+import { mockPlatformUsers } from '@/mock/users';
 
 const { Title, Paragraph, Text } = Typography;
+
+/**
+ * 当前登录用户的占位 userNum —— Mock 数据下视为「创建人」，不可被移出管理员名单。
+ */
+const CURRENT_USER_NUM = 'US-ME';
 
 /**
  * 空间卡片列表（平台 Shell 默认落地页，对应《空间管理 PRD》§8.1）。
@@ -43,6 +49,9 @@ export default function SpaceListPage() {
   const [deleting, setDeleting] = useState<SpaceItem | null>(null);
   const [confirmText, setConfirmText] = useState('');
   const [form] = Form.useForm();
+  // 编辑/新建抽屉中的成员选择（与表单分开管理，便于互斥逻辑）
+  const [adminUserNums, setAdminUserNums] = useState<string[]>([CURRENT_USER_NUM]);
+  const [memberUserNums, setMemberUserNums] = useState<string[]>([]);
 
   const filtered = useMemo(
     () => spaces.filter((s) => !keyword || s.name.includes(keyword) || s.num.includes(keyword)),
@@ -55,6 +64,8 @@ export default function SpaceListPage() {
   function openCreate() {
     setEditingSpace(null);
     form.resetFields();
+    setAdminUserNums([CURRENT_USER_NUM]);
+    setMemberUserNums([]);
     setDrawerOpen(true);
   }
 
@@ -64,14 +75,60 @@ export default function SpaceListPage() {
       name: space.name,
       remark: space.remark,
     });
+    setAdminUserNums(space.admins.map((m) => m.userNum));
+    setMemberUserNums(space.members.map((m) => m.userNum));
     setDrawerOpen(true);
+  }
+
+  /**
+   * 把 userNum 列表映射为 SpaceMember[]。
+   * 如果原空间已有该用户的 SpaceMember，沿用其 role；否则按 fallback 角色生成。
+   */
+  function toMembers(
+    userNums: string[],
+    fallbackRole: SpaceMember['role'],
+    base?: SpaceMember[],
+  ): SpaceMember[] {
+    return userNums.map((num) => {
+      const existing = base?.find((m) => m.userNum === num);
+      if (existing) return { ...existing, role: fallbackRole };
+      const opt = mockPlatformUsers.find((u) => u.userNum === num);
+      return {
+        userNum: num,
+        name: opt?.name ?? num,
+        email: opt?.email ?? '',
+        role: fallbackRole,
+      };
+    });
   }
 
   function handleSubmit() {
     form.validateFields().then((values) => {
+      // 创建人始终是 OWNER，其余管理员 ADMIN
+      const adminMembers: SpaceMember[] = adminUserNums.map((num) => {
+        const original =
+          editingSpace?.admins.find((m) => m.userNum === num) ??
+          editingSpace?.members.find((m) => m.userNum === num);
+        const opt = mockPlatformUsers.find((u) => u.userNum === num);
+        return {
+          userNum: num,
+          name: original?.name ?? opt?.name ?? num,
+          email: original?.email ?? opt?.email ?? '',
+          role: num === CURRENT_USER_NUM ? 'OWNER' : 'ADMIN',
+        };
+      });
+      const memberMembers = toMembers(memberUserNums, 'MEMBER', [
+        ...(editingSpace?.admins ?? []),
+        ...(editingSpace?.members ?? []),
+      ]);
+
       if (editingSpace) {
         setSpaces((prev) =>
-          prev.map((s) => (s.id === editingSpace.id ? { ...s, ...values } : s)),
+          prev.map((s) =>
+            s.id === editingSpace.id
+              ? { ...s, ...values, admins: adminMembers, members: memberMembers }
+              : s,
+          ),
         );
         message.success('已更新空间信息');
       } else {
@@ -83,10 +140,8 @@ export default function SpaceListPage() {
           createdBy: '当前用户',
           createdAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
           myRole: 'ADMIN',
-          admins: [
-            { userNum: 'US-ME', name: '当前用户', email: 'me@example.com', role: 'OWNER' },
-          ],
-          members: [],
+          admins: adminMembers,
+          members: memberMembers,
         };
         setSpaces((prev) => [newSpace, ...prev]);
         message.success('空间创建成功');
@@ -191,7 +246,7 @@ export default function SpaceListPage() {
                       onClick={(e) => e.stopPropagation()}
                       aria-label="更多操作"
                     >
-                      <MoreOutlined />
+                      <EllipsisOutlined />
                     </button>
                   </Dropdown>
                 )}
@@ -218,18 +273,6 @@ export default function SpaceListPage() {
               >
                 {s.remark || '—'}
               </Paragraph>
-              <div className="space-card-avatars">
-                {[...s.admins, ...s.members].slice(0, 5).map((m) => (
-                  <Tooltip key={m.userNum} title={`${m.name} (${m.email})`}>
-                    <Avatar size={28} icon={<UserOutlined />} />
-                  </Tooltip>
-                ))}
-                {s.admins.length + s.members.length > 5 && (
-                  <Avatar size={28} className="space-card-avatars-more">
-                    +{s.admins.length + s.members.length - 5}
-                  </Avatar>
-                )}
-              </div>
             </Card>
           );
         })}
@@ -260,19 +303,67 @@ export default function SpaceListPage() {
           >
             <Input maxLength={30} placeholder="1～30 字符" showCount />
           </Form.Item>
-          <Form.Item label="管理员">
-            <Tag icon={<UserOutlined />} color="blue">
-              当前用户（创建人，不可移除）
-            </Tag>
-            <Tag>+ 选择更多</Tag>
+          <Form.Item label="管理员" required>
+            <Select
+              mode="multiple"
+              value={adminUserNums}
+              onChange={(next: string[]) => {
+                // 创建人不可被移出
+                if (!next.includes(CURRENT_USER_NUM)) {
+                  next = [CURRENT_USER_NUM, ...next];
+                }
+                setAdminUserNums(next);
+                // 管理员中已选的用户不能同时出现在成员里
+                setMemberUserNums((prev) => prev.filter((u) => !next.includes(u)));
+              }}
+              optionLabelProp="label"
+              placeholder="选择平台用户"
+              style={{ width: '100%' }}
+              options={mockPlatformUsers.map((u) => ({
+                value: u.userNum,
+                label:
+                  u.userNum === CURRENT_USER_NUM
+                    ? `${u.name}（创建人，不可移除）`
+                    : `${u.name} · ${u.email}`,
+                disabled: u.userNum === CURRENT_USER_NUM, // 创建人在多选中不可被取消
+              }))}
+              tagRender={(props) => {
+                const isOwner = props.value === CURRENT_USER_NUM;
+                return (
+                  <Tag
+                    color={isOwner ? 'gold' : 'blue'}
+                    closable={!isOwner && props.closable}
+                    onClose={props.onClose}
+                    icon={isOwner ? <CrownOutlined /> : <UserOutlined />}
+                    style={{ marginInlineEnd: 4 }}
+                  >
+                    {props.label}
+                  </Tag>
+                );
+              }}
+            />
             <div className="form-hint">
-              选项来自《用户管理》中状态为「启用」的用户，可多选
+              选项来自《用户管理》中状态为「启用」的用户；创建人始终为管理员且不可移除
             </div>
           </Form.Item>
           <Form.Item label="普通成员">
-            <Input placeholder="选择用户（暂为占位输入）" disabled />
+            <Select
+              mode="multiple"
+              value={memberUserNums}
+              onChange={(next: string[]) => {
+                // 兜底过滤：不允许已是管理员的人出现在成员里
+                setMemberUserNums(next.filter((u) => !adminUserNums.includes(u)));
+              }}
+              placeholder="选择平台用户"
+              style={{ width: '100%' }}
+              options={mockPlatformUsers.map((u) => ({
+                value: u.userNum,
+                label: `${u.name} · ${u.email}`,
+                disabled: adminUserNums.includes(u.userNum),
+              }))}
+            />
             <div className="form-hint">
-              管理员名单中已存在的用户在普通成员中将被置灰
+              管理员名单中已选择的用户在普通成员中将被置灰
             </div>
           </Form.Item>
           <Form.Item name="remark" label="备注">

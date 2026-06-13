@@ -631,7 +631,7 @@ body {
 .space-card-clickable {
   cursor: pointer;
 }
-/* 卡片右上角的三点按钮：默认隐藏，hover/focus 卡片或按钮自身时显示 */
+/* 卡片右上角的横向三点按钮：始终可见 */
 .space-card-more {
   margin-left: auto;
   width: 28px;
@@ -644,13 +644,7 @@ body {
   border-radius: 6px;
   cursor: pointer;
   color: #4e5969;
-  opacity: 0;
-  transition: opacity 0.18s ease, background 0.18s ease;
-}
-.space-card:hover .space-card-more,
-.space-card-more:focus-visible,
-.space-card-more.ant-dropdown-open {
-  opacity: 1;
+  transition: background 0.18s ease;
 }
 .space-card-more:hover {
   background: #f0f4ff;
