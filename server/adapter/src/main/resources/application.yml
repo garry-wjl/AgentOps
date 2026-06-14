@@ -32,6 +32,8 @@ mybatis-plus:
       logic-not-delete-value: 0
 
 agentops:
+  crypto:
+    encryption-key: "XZwCZnFN+AzmS/6ekIBwBgBZnjFrWooOG3uGgOAP6ks="
   auth:
     token-ttl-seconds: 7200
     password-pattern: "^(?=.*[A-Za-z])(?=.*\\d).{8,}$"

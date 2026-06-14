@@ -1,0 +1,140 @@
+{
+  "rules": [
+    {
+      "path": "**/*.java",
+      "rule": "所有类的 package 声明必须遵循 com.agent.ops.<layer>.<domain> 格式，layer 为 facade/client/domain/infra/application/adapter 之一，domain 为业务领域名（user/space/system/model/prompt/skill/tool/sandbox/agent）"
+    },
+    {
+      "path": "**/*.java",
+      "rule": "所有类/接口/枚举/方法/字段/构造器必须有中文 JavaDoc 注释（/** ... */），不得使用单行 // 注释替代；描述内容要业务含义明确，不得为占位文字"
+    },
+    {
+      "path": "**/domain/**/*.java",
+      "rule": "领域层（domain）禁止依赖 Spring 框架或任何第三方框架（cn.hutool.* 与 JDK 除外）；不得使用 @Component/@Service/@Repository 等 Spring 注解"
+    },
+    {
+      "path": "**/domain/**/*.java",
+      "rule": "聚合根/实体必须继承 DomainEntity（com.agent.ops.facade.domain.DomainEntity），具备 id/num/createNo/updateNo/createTime/updateTime 审计字段；聚合根还必须持有 Repository/Gateway/DomainEventPublisher 三个领域协作依赖属性"
+    },
+    {
+      "path": "**/domain/**/*.java",
+      "rule": "聚合根/实体中禁止出现 is_deleted/deleted/isDeleted 软删除标记；软删除标记仅在 infra 层 Entity 与数据库表中使用"
+    },
+    {
+      "path": "**/domain/**/*.java",
+      "rule": "聚合根仅允许三类领域方法：①状态变化（enable/disable/publish/withdraw/submit/offline/markOnline/markOffline/republish 等）②delete(String operatorCode) ③save(String operatorCode)；禁止定义 rename/updateConfig/updateContent/editContent/editAssembly/changeKey/refreshCurrentVersion 等改字段方法"
+    },
+    {
+      "path": "**/domain/**/*.java",
+      "rule": "save 方法内部执行 validate() + initialize(operatorCode) + repository.save(this) + 仅新建时发 created 事件；状态变化方法内部做前置校验 + 状态切换 + initialize + repository.save + 发布对应状态事件；delete 做前置校验 + initialize + repository.deleteByNum + 发布删除事件"
+    },
+    {
+      "path": "**/domain/**/*.java",
+      "rule": "所有领域方法均须携带 operatorCode 参数（类型 String，存用户的业务编码 user.num）"
+    },
+    {
+      "path": "**/domain/**/*.java",
+      "rule": "Factory 接口只能包含两个方法：create(用户填写业务字段...) 和 createByNum(String num)；禁止设计 createById/rebuild 等其他工厂方法"
+    },
+    {
+      "path": "**/domain/**/*.java",
+      "rule": "Gateway 方法只能承载：本领域业务编码生成（generateXxxCode）、本领域字段加密（encrypt(plaintext)）、本领域 save 时格式校验/解析（validateConfig/extractVariables/parseFrontmatter）；禁止承载跨领域数据查询、外部 HTTP/SMTP/进程调用、脱敏展示"
+    },
+    {
+      "path": "**/domain/**/*.java",
+      "rule": "跨领域引用字段一律使用业务编码 String 类型（字段命名 <对方领域>Code，如 ownerUserCode/skillCodes/modelCode），禁止使用 Long id 或 BIGINT 跨领域引用"
+    },
+    {
+      "path": "**/application/**/*.java",
+      "rule": "应用层（application）禁止注入/调用任何 domain Repository 接口或领域 Gateway 接口；查询需求统一通过对应领域的 QueryService 获取，QueryService 方法命名使用 *ByCode（如 getByNum/listByCodes）"
+    },
+    {
+      "path": "**/application/**/*.java",
+      "rule": "Spring Bean 注入统一使用 @Resource 注解；禁止使用 @Autowired、构造器注入、Setter 注入"
+    },
+    {
+      "path": "**/application/**/*.java",
+      "rule": "CommandService 写操作必须使用 RedisDistributedLock 保护（锁 key 格式：agentops:lock:<domain>:<bizKey>），先获取锁，再开启事务执行"
+    },
+    {
+      "path": "**/application/**/*.java",
+      "rule": "Service 方法名称统一：命令类使用 create/update/delete/enable/disable/publish/withdraw 等；查询类使用 getBy*/page/list 等；方法内部不调用同类中的领域动作（领域动作在聚合根方法中）"
+    },
+    {
+      "path": "**/infra/**/*.java",
+      "rule": "RepositoryImpl 必须实现 domain 包下的 Repository 接口，负责 Entity ↔ 领域对象转换与持久化；RepositoryImpl 不作为 application 查询入口"
+    },
+    {
+      "path": "**/infra/**/*.java",
+      "rule": "Entity 类的字段与数据库表列名一致（通过 @TableField 明确映射）；soft-delete 列映射到 isDeleted 字段；JSON 列存储为 String 类型在 toEntity/toDomain 中手动序列化/反序列化"
+    },
+    {
+      "path": "**/infra/**/*.java",
+      "rule": "FactoryImpl 只能实现 create(用户字段) 与 createByNum(num) 两个方法；createByNum 内部通过 Repository.findByNum 获取数据后构建领域对象并注入领域协作依赖"
+    },
+    {
+      "path": "**/infra/**/*.java",
+      "rule": "GatewayImpl 实现 domain 层的 Gateway 接口，只能承载业务编码生成（委托 BizCodeGenerator）、加密（委托 SecretEncryptor）、格式校验/解析能力；不得承载跨领域 QueryService 注入或外部 HTTP 调用"
+    },
+    {
+      "path": "**/adapter/**/*.java",
+      "rule": "HTTP 请求方法仅允许 GET（查询）和 POST（增删改），禁止使用 PUT/DELETE/PATCH"
+    },
+    {
+      "path": "**/adapter/**/*.java",
+      "rule": "Controller 统一继承 BaseController（com.agent.ops.adapter.config.BaseController），通过 getCurrentUserCode() 获取当前用户业务编码并注入到 param.operatorCode"
+    },
+    {
+      "path": "**/*.java",
+      "rule": "复合型操作（同时用于增删改查）时，必须使用 Hutool 工具类：字符串用 StrUtil、集合用 CollUtil、日期用 DateUtil/LocalDateTimeUtil、断言用 Assert、随机码用 RandomUtil、解析占位符用 ReUtil"
+    },
+    {
+      "path": "**/*.java",
+      "rule": "数据库查询使用 LambdaQueryWrapper（禁止 QueryWrapper），数据库更新使用 LambdaUpdateWrapper（禁止 UpdateWrapper）"
+    },
+    {
+      "path": "**/*.java",
+      "rule": "业务异常使用 BusinessException(code, message)（com.agent.ops.facade.exception.BusinessException），错误码为大写驼峰+下划线（如 SPACE_NAME_DUPLICATED、MODEL_NOT_FOUND）"
+    },
+    {
+      "path": "**/facade/**/*.java",
+      "rule": "facade 层只能放置跨层通用基础类型：DomainEntity/DomainEventDTO/DomainEventPublisher/Result/PageResult/PageQuery/BizCodeGenerator/SecretEncryptor 等，不得放置领域业务逻辑"
+    },
+    {
+      "path": "**/*.java",
+      "rule": "使用 Lombok @Getter/@Setter/@Data 注解时，必须同时保留手写的显式 getter/setter 方法在源文件中（JDK21 + Lombok 兼容性限制）"
+    },
+    {
+      "path": "**/*.java",
+      "rule": "静态工具类的枚举、集合常量建议使用 private 构造方法的 final class（如 final class XxxConstant { private XxxConstant(){} }）"
+    },
+    {
+      "path": "**/*.java",
+      "rule": "层间传递：领域对象必须装配进 client 层的 DTO（domain 模型不直接返回给 adapter）；VO 只展示必要字段且敏感字段脱敏"
+    },
+    {
+      "path": "**/client/**/*.java",
+      "rule": "client 层枚举类命名规范：状态枚举为 <领域名|领域名+Version>+Status（如 ModelStatus/SkillStatus/SkillVersionStatus），字段统一命名为 status"
+    },
+    {
+      "path": "**/client/**/*.java",
+      "rule": "Param/DTO 使用 public 字段风格（不依赖 Lombok @Data 生成 getter/setter），因为 client 模块未配置 Lombok processor"
+    },
+    {
+      "path": "**/*.java",
+      "rule": "跨模块间引用禁止使用内部 ID，必须使用 String 类型的业务编码（num）；JSON 数组列（如 admin_user_codes）使用 List<String> 存储"
+    },
+    {
+      "path": "**/*.java",
+      "rule": "方法参数校验：String 使用 Assert.notBlank，Long/Integer 使用 Assert.notNull，集合使用 Assert.isTrue(CollUtil.isNotEmpty(...))"
+    },
+    {
+      "path": "**/mapper/*.xml",
+      "rule": "MyBatis XML 中 JSON 列查询使用 JSON_CONTAINS(column, JSON_QUOTE(?)) 语法；分页使用 MP 的 IPage 接口"
+    },
+    {
+      "path": "**/*mapper*.xml",
+      "rule": "SQL 查询必须包含 is_deleted = 0 过滤条件（软删除过滤），使用 WHERE 条件而非注解"
+    }
+  ]
+}

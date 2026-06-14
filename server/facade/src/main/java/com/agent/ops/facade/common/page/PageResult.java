@@ -75,4 +75,13 @@ public class PageResult<T> {
         result.records = records == null ? Collections.emptyList() : records;
         return result;
     }
+
+    public Long getTotal() { return total; }
+    public void setTotal(Long total) { this.total = total; }
+    public Integer getPageNo() { return pageNo; }
+    public void setPageNo(Integer pageNo) { this.pageNo = pageNo; }
+    public Integer getPageSize() { return pageSize; }
+    public void setPageSize(Integer pageSize) { this.pageSize = pageSize; }
+    public List<T> getRecords() { return records; }
+    public void setRecords(List<T> records) { this.records = records; }
 }
