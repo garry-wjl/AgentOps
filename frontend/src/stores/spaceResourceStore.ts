@@ -1,57 +1,100 @@
 import { create } from 'zustand';
-import { mockAgents, type AgentItem } from '@/mock/agents';
-import { mockSkills, type SkillItem } from '@/mock/skills';
-import { mockTools, type ToolItem } from '@/mock/tools';
+import * as agentApi from '@/api/agent';
+import * as skillApi from '@/api/skill';
+import * as toolApi from '@/api/tool';
+import type { AgentDTO, AssemblySnapshotDTO } from '@/api/agent';
+import type { SkillDTO, SkillVersionDTO } from '@/api/skill';
+import type { ToolDTO } from '@/api/tool';
 
-/**
- * 空间内资源（Agent / Skill / 工具）的全局状态。
- *
- * 这三个模块的「新建/编辑」改成了独立路由页，列表与编辑页之间需要共享数据，
- * 因此从原来的 useState(mockX) 升级到 zustand store。
- *
- * 当对接真实后端时，这里改成调用 API 即可，列表与编辑页代码不变。
- */
+export interface AgentItem extends AgentDTO {}
+export interface SkillItem extends SkillDTO {}
+export interface ToolItem extends ToolDTO {}
+
 interface SpaceResourceState {
   agents: AgentItem[];
   skills: SkillItem[];
   tools: ToolItem[];
-  upsertAgent: (a: AgentItem) => void;
-  upsertSkill: (s: SkillItem) => void;
-  upsertTool: (t: ToolItem) => void;
-  removeAgent: (id: string) => void;
-  removeSkill: (id: string) => void;
-  removeTool: (id: string) => void;
+  loading: Record<string, boolean>;
+
+  fetchAgents: (spaceCode: string) => Promise<void>;
+  fetchSkills: (spaceCode: string) => Promise<void>;
+  fetchTools: (spaceCode: string) => Promise<void>;
+
+  createAgent: (spaceCode: string, name: string, assembly: AssemblySnapshotDTO) => Promise<AgentDTO>;
+  createSkill: (spaceCode: string, name: string, description: string, skillMd?: string) => Promise<SkillDTO>;
+  createTool: (spaceCode: string, name: string, type: string, subType: string, configJson: string) => Promise<ToolDTO>;
+
+  removeAgent: (num: string) => Promise<void>;
+  removeSkill: (num: string) => Promise<void>;
+  removeTool: (num: string) => Promise<void>;
 }
 
-export const useSpaceResourceStore = create<SpaceResourceState>((set) => ({
-  agents: mockAgents,
-  skills: mockSkills,
-  tools: mockTools,
-  upsertAgent: (a) =>
-    set((state) => {
-      const idx = state.agents.findIndex((x) => x.id === a.id);
-      if (idx === -1) return { agents: [a, ...state.agents] };
-      const next = state.agents.slice();
-      next[idx] = a;
-      return { agents: next };
-    }),
-  upsertSkill: (s) =>
-    set((state) => {
-      const idx = state.skills.findIndex((x) => x.id === s.id);
-      if (idx === -1) return { skills: [s, ...state.skills] };
-      const next = state.skills.slice();
-      next[idx] = s;
-      return { skills: next };
-    }),
-  upsertTool: (t) =>
-    set((state) => {
-      const idx = state.tools.findIndex((x) => x.id === t.id);
-      if (idx === -1) return { tools: [t, ...state.tools] };
-      const next = state.tools.slice();
-      next[idx] = t;
-      return { tools: next };
-    }),
-  removeAgent: (id) => set((state) => ({ agents: state.agents.filter((a) => a.id !== id) })),
-  removeSkill: (id) => set((state) => ({ skills: state.skills.filter((s) => s.id !== id) })),
-  removeTool: (id) => set((state) => ({ tools: state.tools.filter((t) => t.id !== id) })),
+export const useSpaceResourceStore = create<SpaceResourceState>((set, get) => ({
+  agents: [],
+  skills: [],
+  tools: [],
+  loading: {},
+
+  async fetchAgents(spaceCode) {
+    set((s) => ({ loading: { ...s.loading, agents: true } }));
+    try {
+      const agents = await agentApi.listAgentVersions(spaceCode);
+      set({ agents: agents as unknown as AgentItem[] });
+    } finally {
+      set((s) => ({ loading: { ...s.loading, agents: false } }));
+    }
+  },
+
+  async fetchSkills(spaceCode) {
+    set((s) => ({ loading: { ...s.loading, skills: true } }));
+    try {
+      const skills = await skillApi.listEffectiveSkills(spaceCode);
+      set({ skills: skills as SkillItem[] });
+    } finally {
+      set((s) => ({ loading: { ...s.loading, skills: false } }));
+    }
+  },
+
+  async fetchTools(spaceCode) {
+    set((s) => ({ loading: { ...s.loading, tools: true } }));
+    try {
+      const tools = await toolApi.listEffectiveTools(spaceCode);
+      set({ tools: tools as ToolItem[] });
+    } finally {
+      set((s) => ({ loading: { ...s.loading, tools: false } }));
+    }
+  },
+
+  async createAgent(spaceCode, name, assembly) {
+    const result = await agentApi.createAgent(spaceCode, name, name, '', [], '', '1.0.0', assembly);
+    set((s) => ({ agents: [result as unknown as AgentItem, ...s.agents] }));
+    return result;
+  },
+
+  async createSkill(spaceCode, name, description, skillMd) {
+    const result = await skillApi.createSkill(spaceCode, name, description, [], '', skillMd);
+    set((s) => ({ skills: [result as SkillItem, ...s.skills] }));
+    return result;
+  },
+
+  async createTool(spaceCode, name, type, subType, configJson) {
+    const result = await toolApi.createTool(spaceCode, name, type, subType, configJson);
+    set((s) => ({ tools: [result as ToolItem, ...s.tools] }));
+    return result;
+  },
+
+  async removeAgent(num) {
+    await agentApi.deleteAgent(num);
+    set((s) => ({ agents: s.agents.filter((a) => a.num !== num) }));
+  },
+
+  async removeSkill(num) {
+    await skillApi.deleteSkill(num);
+    set((s) => ({ skills: s.skills.filter((a) => a.num !== num) }));
+  },
+
+  async removeTool(num) {
+    await toolApi.deleteTool(num);
+    set((s) => ({ tools: s.tools.filter((a) => a.num !== num) }));
+  },
 }));
