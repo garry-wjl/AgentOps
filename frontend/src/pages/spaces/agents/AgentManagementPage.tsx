@@ -1,12 +1,10 @@
 import { PlusOutlined } from '@ant-design/icons';
-import { Button, Drawer, Form, Input, Select, Space, Table, Tag, Typography, message } from 'antd';
+import { Button, Input, Popconfirm, Select, Space, Table, Tag, Typography, message } from 'antd';
 import { useMemo, useState } from 'react';
-import { mockAgents, type AgentItem, type AgentStatus } from '@/mock/agents';
-import { mockModels } from '@/mock/models';
-import { mockPrompts } from '@/mock/prompts';
-import { mockSkills } from '@/mock/skills';
-import { mockTools } from '@/mock/tools';
-import { mockSandboxes } from '@/mock/sandboxes';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useSpaceResourceStore } from '@/stores/spaceResourceStore';
+import type { AgentItem, AgentStatus } from '@/mock/agents';
+import { ellipsisCell } from '@/utils/listCell';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -17,12 +15,12 @@ const STATUS_LABELS: Record<AgentStatus, { color: string; label: string }> = {
 };
 
 export default function AgentManagementPage() {
-  const [agents, setAgents] = useState<AgentItem[]>(mockAgents);
+  const navigate = useNavigate();
+  const { spaceId = '' } = useParams();
+  const agents = useSpaceResourceStore((s) => s.agents);
+  const removeAgent = useSpaceResourceStore((s) => s.removeAgent);
   const [keyword, setKeyword] = useState('');
   const [statusFilter, setStatusFilter] = useState<AgentStatus | 'ALL'>('ALL');
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [editing, setEditing] = useState<AgentItem | null>(null);
-  const [form] = Form.useForm();
 
   const filtered = useMemo(
     () =>
@@ -33,47 +31,6 @@ export default function AgentManagementPage() {
       ),
     [agents, statusFilter, keyword],
   );
-
-  function openCreate() {
-    setEditing(null);
-    form.resetFields();
-    setDrawerOpen(true);
-  }
-
-  function openEdit(a: AgentItem) {
-    setEditing(a);
-    form.setFieldsValue({
-      name: a.name,
-      description: a.description,
-      modelName: a.modelName,
-      promptKey: a.promptKey,
-      skills: a.skills,
-      tools: a.tools,
-      sandboxName: a.sandboxName,
-    });
-    setDrawerOpen(true);
-  }
-
-  function handleSubmit() {
-    form.validateFields().then((values) => {
-      if (editing) {
-        setAgents((prev) => prev.map((a) => (a.id === editing.id ? { ...a, ...values } : a)));
-        message.success('Agent 已更新');
-      } else {
-        const a: AgentItem = {
-          id: `ag-${Date.now()}`,
-          num: `AG${Date.now()}001`,
-          status: 'DRAFT',
-          updatedBy: '当前用户',
-          updatedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
-          ...values,
-        };
-        setAgents((prev) => [a, ...prev]);
-        message.success('Agent 创建成功');
-      }
-      setDrawerOpen(false);
-    });
-  }
 
   return (
     <div className="page-section">
@@ -104,7 +61,7 @@ export default function AgentManagementPage() {
               { value: 'OFFLINE', label: '离线' },
             ]}
           />
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('new')}>
             新建 Agent
           </Button>
         </Space>
@@ -114,29 +71,39 @@ export default function AgentManagementPage() {
         rowKey="id"
         dataSource={filtered}
         pagination={{ pageSize: 10 }}
+        scroll={{ x: 1280 }}
+        tableLayout="fixed"
         columns={[
+          {
+            title: '编码',
+            dataIndex: 'num',
+            width: 240,
+            fixed: 'left',
+            render: (v: string) => <Text code>{v}</Text>,
+          },
           {
             title: '名称',
             dataIndex: 'name',
-            render: (v, r) => (
-              <Space direction="vertical" size={0}>
-                <Text strong>{v}</Text>
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  {r.num}
-                </Text>
-              </Space>
-            ),
+            width: 200,
+            render: (v: string) => <Text strong>{v}</Text>,
+          },
+          {
+            title: '描述',
+            dataIndex: 'description',
+            width: 240,
+            render: (v: string) => ellipsisCell(v),
           },
           {
             title: '模型',
             dataIndex: 'modelName',
             width: 160,
-            render: (v) => <Tag color="purple">{v}</Tag>,
+            render: (v: string) => <Tag color="purple">{v}</Tag>,
           },
-          { title: 'Prompt Key', dataIndex: 'promptKey', width: 220 },
+          { title: 'Prompt Key', dataIndex: 'promptKey', width: 220, render: (v) => ellipsisCell(v) },
           {
             title: 'Skill / 工具 / 沙箱',
-            render: (_, r) => (
+            width: 320,
+            render: (_: unknown, r: AgentItem) => (
               <Space wrap size={4}>
                 {r.skills.map((s) => (
                   <Tag key={s} color="cyan">
@@ -160,100 +127,30 @@ export default function AgentManagementPage() {
               <Tag color={STATUS_LABELS[s].color}>{STATUS_LABELS[s].label}</Tag>
             ),
           },
-          { title: '最近修改', dataIndex: 'updatedBy', width: 100 },
-          { title: '更新时间', dataIndex: 'updatedAt', width: 140 },
+          { title: '最近修改', dataIndex: 'updatedBy', width: 120 },
+          { title: '更新时间', dataIndex: 'updatedAt', width: 160 },
           {
             title: '操作',
             width: 200,
-            render: (_, r) => (
+            fixed: 'right',
+            render: (_: unknown, r: AgentItem) => (
               <Space>
-                <a onClick={() => openEdit(r)}>查看</a>
-                <a onClick={() => openEdit(r)}>编辑</a>
-                {r.status === 'DRAFT' && <a>提交</a>}
-                {r.status === 'ONLINE' && <a>下线</a>}
-                {r.status === 'OFFLINE' && <a>上线</a>}
+                <a onClick={() => navigate(`${r.id}/edit`)}>查看</a>
+                <a onClick={() => navigate(`${r.id}/edit`)}>编辑</a>
+                <Popconfirm
+                  title={`确定删除 ${r.name}？`}
+                  onConfirm={() => {
+                    removeAgent(r.id);
+                    message.success('已删除');
+                  }}
+                >
+                  <a style={{ color: '#ff4d4f' }}>删除</a>
+                </Popconfirm>
               </Space>
             ),
           },
         ]}
       />
-
-      <Drawer
-        title={editing ? `编辑 Agent - ${editing.name}` : '新建 Agent'}
-        width={640}
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        extra={
-          <Space>
-            <Button onClick={() => setDrawerOpen(false)}>取消</Button>
-            <Button onClick={handleSubmit}>保存为草稿</Button>
-            <Button type="primary" onClick={handleSubmit}>
-              保存并提交
-            </Button>
-          </Space>
-        }
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item label="业务编码">
-            <Input value={editing?.num || '系统提交后生成'} disabled />
-          </Form.Item>
-          <Form.Item name="name" label="Agent 名称" rules={[{ required: true }]}>
-            <Input maxLength={50} />
-          </Form.Item>
-          <Form.Item name="description" label="描述">
-            <Input.TextArea rows={2} maxLength={200} />
-          </Form.Item>
-          <Form.Item name="modelName" label="模型" rules={[{ required: true }]}>
-            <Select
-              placeholder="选择模型"
-              options={mockModels.filter((m) => m.status === 'ENABLED').map((m) => ({
-                value: m.name,
-                label: `${m.name} · ${m.modelId}`,
-              }))}
-            />
-          </Form.Item>
-          <Form.Item name="promptKey" label="System Prompt（按 Key 引用）" rules={[{ required: true }]}>
-            <Select
-              showSearch
-              placeholder="选择启用态 Prompt"
-              options={mockPrompts.filter((p) => p.status === 'ENABLED').map((p) => ({
-                value: p.promptKey,
-                label: `${p.promptKey} · ${p.name}`,
-              }))}
-            />
-          </Form.Item>
-          <Form.Item name="skills" label="绑定 Skill">
-            <Select
-              mode="multiple"
-              placeholder="选择 Skill"
-              options={mockSkills.filter((s) => s.status === 'ENABLED').map((s) => ({
-                value: s.name,
-                label: s.name,
-              }))}
-            />
-          </Form.Item>
-          <Form.Item name="tools" label="绑定工具">
-            <Select
-              mode="multiple"
-              placeholder="选择工具"
-              options={mockTools.filter((t) => t.status === 'ENABLED').map((t) => ({
-                value: `${t.name}(${t.type === 'MCP' ? 'MCP' : 'Function'})`,
-                label: `${t.name} · ${t.type}`,
-              }))}
-            />
-          </Form.Item>
-          <Form.Item name="sandboxName" label="代码沙箱（可选）">
-            <Select
-              allowClear
-              placeholder="选择在线沙箱"
-              options={mockSandboxes.filter((s) => s.status === 'ONLINE').map((s) => ({
-                value: s.name,
-                label: `${s.name} · ${s.cpu}核 / ${s.memoryMb}MB`,
-              }))}
-            />
-          </Form.Item>
-        </Form>
-      </Drawer>
     </div>
   );
 }
