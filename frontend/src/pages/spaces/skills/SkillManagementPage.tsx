@@ -1,7 +1,10 @@
 import { PlusOutlined } from '@ant-design/icons';
-import { Button, Drawer, Form, Input, Space, Table, Tag, Typography, message } from 'antd';
-import { useState } from 'react';
-import { mockSkills, type SkillItem, type SkillStatus } from '@/mock/skills';
+import { Button, Input, Popconfirm, Space, Table, Tag, Typography, message } from 'antd';
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useSpaceResourceStore } from '@/stores/spaceResourceStore';
+import type { SkillItem, SkillStatus } from '@/mock/skills';
+import { ellipsisCell } from '@/utils/listCell';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -12,45 +15,15 @@ const STATUS: Record<SkillStatus, { color: string; label: string }> = {
 };
 
 export default function SkillManagementPage() {
-  const [list, setList] = useState<SkillItem[]>(mockSkills);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [editing, setEditing] = useState<SkillItem | null>(null);
-  const [form] = Form.useForm();
+  const navigate = useNavigate();
+  const skills = useSpaceResourceStore((s) => s.skills);
+  const removeSkill = useSpaceResourceStore((s) => s.removeSkill);
+  const [keyword, setKeyword] = useState('');
 
-  function openEdit(s: SkillItem) {
-    setEditing(s);
-    form.setFieldsValue(s);
-    setDrawerOpen(true);
-  }
-
-  function openCreate() {
-    setEditing(null);
-    form.resetFields();
-    setDrawerOpen(true);
-  }
-
-  function handleSubmit() {
-    form.validateFields().then((v) => {
-      if (editing) {
-        setList((prev) => prev.map((it) => (it.id === editing.id ? { ...it, ...v } : it)));
-      } else {
-        setList((prev) => [
-          {
-            id: `sk-${Date.now()}`,
-            num: `SK${Date.now()}001`,
-            status: 'DRAFT',
-            boundAgents: [],
-            updatedBy: '当前用户',
-            updatedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
-            ...v,
-          },
-          ...prev,
-        ]);
-      }
-      message.success('已保存');
-      setDrawerOpen(false);
-    });
-  }
+  const filtered = useMemo(
+    () => skills.filter((s) => !keyword || s.name.includes(keyword) || s.num.includes(keyword)),
+    [skills, keyword],
+  );
 
   return (
     <div className="page-section">
@@ -64,7 +37,13 @@ export default function SkillManagementPage() {
           </Paragraph>
         </div>
         <Space>
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+          <Input.Search
+            placeholder="搜索名称或编码"
+            allowClear
+            onSearch={setKeyword}
+            style={{ width: 240 }}
+          />
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('new')}>
             新建 Skill
           </Button>
         </Space>
@@ -72,27 +51,35 @@ export default function SkillManagementPage() {
 
       <Table
         rowKey="id"
-        dataSource={list}
+        dataSource={filtered}
         pagination={{ pageSize: 10 }}
+        scroll={{ x: 1200 }}
+        tableLayout="fixed"
         columns={[
+          {
+            title: '编码',
+            dataIndex: 'num',
+            width: 240,
+            fixed: 'left',
+            render: (v: string) => <Text code>{v}</Text>,
+          },
           {
             title: '名称',
             dataIndex: 'name',
-            render: (v, r) => (
-              <Space direction="vertical" size={0}>
-                <Text strong>{v}</Text>
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  {r.num}
-                </Text>
-              </Space>
-            ),
+            width: 200,
+            render: (v: string) => <Text strong>{v}</Text>,
           },
-          { title: 'Key', dataIndex: 'skillKey', render: (v) => <Text code>{v}</Text> },
-          { title: '描述', dataIndex: 'description', ellipsis: true },
+          { title: 'Key', dataIndex: 'skillKey', width: 220, render: (v: string) => <Text code>{v}</Text> },
+          {
+            title: '描述',
+            dataIndex: 'description',
+            width: 280,
+            render: (v: string) => ellipsisCell(v),
+          },
           {
             title: '已绑定 Agent',
             dataIndex: 'boundAgents',
-            width: 180,
+            width: 200,
             render: (agents: string[]) =>
               agents.length === 0 ? (
                 <Text type="secondary">未绑定</Text>
@@ -114,52 +101,26 @@ export default function SkillManagementPage() {
           },
           {
             title: '操作',
-            width: 160,
-            render: (_, r) => (
+            width: 200,
+            fixed: 'right',
+            render: (_: unknown, r: SkillItem) => (
               <Space>
-                <a onClick={() => openEdit(r)}>查看</a>
-                <a onClick={() => openEdit(r)}>编辑</a>
+                <a onClick={() => navigate(`${r.id}/edit`)}>查看</a>
+                <a onClick={() => navigate(`${r.id}/edit`)}>编辑</a>
+                <Popconfirm
+                  title={`确定删除 ${r.name}？`}
+                  onConfirm={() => {
+                    removeSkill(r.id);
+                    message.success('已删除');
+                  }}
+                >
+                  <a style={{ color: '#ff4d4f' }}>删除</a>
+                </Popconfirm>
               </Space>
             ),
           },
         ]}
       />
-
-      <Drawer
-        title={editing ? `编辑 Skill - ${editing.name}` : '新建 Skill'}
-        width={560}
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        extra={
-          <Space>
-            <Button onClick={() => setDrawerOpen(false)}>取消</Button>
-            <Button type="primary" onClick={handleSubmit}>
-              保存
-            </Button>
-          </Space>
-        }
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item label="业务编码">
-            <Input value={editing?.num || '系统提交后生成'} disabled />
-          </Form.Item>
-          <Form.Item name="name" label="名称" rules={[{ required: true }]}>
-            <Input maxLength={50} />
-          </Form.Item>
-          <Form.Item name="skillKey" label="Skill Key" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item name="description" label="描述">
-            <Input.TextArea rows={2} />
-          </Form.Item>
-          <Form.Item name="inputSchema" label="输入 Schema (JSON)">
-            <Input.TextArea rows={3} placeholder='{ "field": "string" }' />
-          </Form.Item>
-          <Form.Item name="outputSchema" label="输出 Schema (JSON)">
-            <Input.TextArea rows={3} />
-          </Form.Item>
-        </Form>
-      </Drawer>
     </div>
   );
 }

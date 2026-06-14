@@ -23,6 +23,7 @@ import {
   type SandboxProvider,
   type SandboxStatus,
 } from '@/mock/sandboxes';
+import { ellipsisCell } from '@/utils/listCell';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -195,18 +196,21 @@ export default function SandboxManagementPage() {
         rowKey="id"
         dataSource={filtered}
         pagination={{ pageSize: 10 }}
+        scroll={{ x: 1240 }}
+        tableLayout="fixed"
         columns={[
+          {
+            title: '编码',
+            dataIndex: 'num',
+            width: 240,
+            fixed: 'left',
+            render: (v: string) => <Text code>{v || '草稿未生成'}</Text>,
+          },
           {
             title: '名称',
             dataIndex: 'name',
-            render: (v, r) => (
-              <Space direction="vertical" size={0}>
-                <Text strong>{v}</Text>
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  {r.num || '草稿未生成编码'}
-                </Text>
-              </Space>
-            ),
+            width: 200,
+            render: (v: string) => <Text strong>{v}</Text>,
           },
           {
             title: '供应商',
@@ -228,7 +232,7 @@ export default function SandboxManagementPage() {
           {
             title: '状态',
             dataIndex: 'status',
-            width: 130,
+            width: 140,
             render: (s: SandboxStatus, r) => {
               const it = STATUS_BADGE[s];
               return (
@@ -244,7 +248,7 @@ export default function SandboxManagementPage() {
                   />
                   {r.lastTransitionReason && (
                     <Text type="secondary" style={{ fontSize: 11 }}>
-                      {r.lastTransitionReason}
+                      {ellipsisCell(r.lastTransitionReason, 16)}
                     </Text>
                   )}
                 </Space>
@@ -255,6 +259,7 @@ export default function SandboxManagementPage() {
           {
             title: '操作',
             width: 220,
+            fixed: 'right',
             render: (_, r) => (
               <Space>
                 <a onClick={() => openView(r)}>查看</a>

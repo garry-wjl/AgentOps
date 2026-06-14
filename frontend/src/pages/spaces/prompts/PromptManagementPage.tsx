@@ -122,23 +122,26 @@ export default function PromptManagementPage() {
         rowKey="id"
         dataSource={filtered}
         pagination={{ pageSize: 10 }}
+        scroll={{ x: 1280 }}
+        tableLayout="fixed"
         columns={[
+          {
+            title: '编码',
+            dataIndex: 'num',
+            width: 240,
+            fixed: 'left',
+            render: (v: string) => <Text code>{v || '草稿未生成'}</Text>,
+          },
           {
             title: '名称',
             dataIndex: 'name',
-            render: (v, r) => (
-              <Space direction="vertical" size={0}>
-                <Text strong>{v}</Text>
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  {r.num || '草稿未生成编码'}
-                </Text>
-              </Space>
-            ),
+            width: 200,
+            render: (v: string) => <Text strong>{v}</Text>,
           },
           { title: 'Key', dataIndex: 'promptKey', width: 240, render: (v) => <Text code>{v}</Text> },
           {
             title: '变量',
-            width: 200,
+            width: 240,
             render: (_, r) => (
               <Space wrap size={4}>
                 {r.variables.map((v) => (
@@ -155,11 +158,12 @@ export default function PromptManagementPage() {
             width: 90,
             render: (s: PromptStatus) => <Tag color={STATUS[s].color}>{STATUS[s].label}</Tag>,
           },
-          { title: '最近修改', dataIndex: 'updatedBy', width: 100 },
-          { title: '更新时间', dataIndex: 'updatedAt', width: 140 },
+          { title: '最近修改', dataIndex: 'updatedBy', width: 120 },
+          { title: '更新时间', dataIndex: 'updatedAt', width: 160 },
           {
             title: '操作',
             width: 200,
+            fixed: 'right',
             render: (_, r) => (
               <Space>
                 <a onClick={() => openEdit(r)}>查看</a>

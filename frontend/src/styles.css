@@ -913,3 +913,22 @@ body {
 .workbench-shortcut-tile:hover .workbench-shortcut-arrow {
   color: #1677ff;
 }
+
+/* ===================== 列表单元格统一不换行 ===================== */
+.ant-table-tbody > tr > td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* 对 Tag 集合 / 多行内容例外：包含 ant-space-wrap 的列允许换行 */
+.ant-table-tbody > tr > td:has(.ant-space-wrap),
+.ant-table-tbody > tr > td:has(.ant-tag) {
+  white-space: normal;
+}
+/* 锁定固定列阴影 */
+.ant-table-cell-fix-left::after {
+  box-shadow: inset 6px 0 4px -4px rgba(0, 0, 0, 0.04);
+}
+.ant-table-cell-fix-right::after {
+  box-shadow: inset -6px 0 4px -4px rgba(0, 0, 0, 0.04);
+}

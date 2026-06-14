@@ -8,21 +8,24 @@ import SpaceListPage from '@/pages/platform/spaces/SpaceListPage';
 import UserManagementPage from '@/pages/users/UserManagementPage';
 import SystemSettingsPage from '@/pages/platform/system-settings/SystemSettingsPage';
 import AgentManagementPage from '@/pages/spaces/agents/AgentManagementPage';
+import AgentEditPage from '@/pages/spaces/agents/AgentEditPage';
 import SandboxManagementPage from '@/pages/spaces/sandboxes/SandboxManagementPage';
 import ModelManagementPage from '@/pages/spaces/models/ModelManagementPage';
 import PromptManagementPage from '@/pages/spaces/prompts/PromptManagementPage';
 import SkillManagementPage from '@/pages/spaces/skills/SkillManagementPage';
+import SkillEditPage from '@/pages/spaces/skills/SkillEditPage';
 import ToolManagementPage from '@/pages/spaces/tools/ToolManagementPage';
-import DebugPlaceholderPage from '@/pages/spaces/debug/DebugPlaceholderPage';
-import SpaceMembersPage from '@/pages/spaces/members/SpaceMembersPage';
+import ToolEditPage from '@/pages/spaces/tools/ToolEditPage';
+import ComingSoonPage from '@/components/ComingSoonPage';
 import { AdminGuard, AuthGuard } from '@/routes/Guards';
 
 /**
  * 路由结构：
  * - 平台 Shell：/platform/{workbench|spaces|users|system-settings}
  *   登录默认落地 /platform/workbench（跨空间总览）
- * - 空间 Shell：/spaces/:spaceId/{agents|sandboxes|models|prompts|skills|tools|debug|members}
- *   空间内不再有「工作台」子页，进入空间默认到 Agent 管理
+ * - 空间 Shell：/spaces/:spaceId/{agents|sandboxes|models|prompts|skills|tools|memory|knowledge|debug/*}
+ *   Agent / Skill / 工具 的新建/编辑使用整页路由，不再使用抽屉。
+ *   memory / knowledge / debug/agent-debug / debug/agent-evaluation 为待建设占位页。
  */
 export default function App() {
   return (
@@ -48,14 +51,64 @@ export default function App() {
           <Route index element={<Navigate to="agents" replace />} />
           {/* 兼容旧的 /spaces/:id/dashboard 链接 */}
           <Route path="dashboard" element={<Navigate to="../agents" relative="path" replace />} />
+
+          {/* Agent */}
           <Route path="agents" element={<AgentManagementPage />} />
+          <Route path="agents/new" element={<AgentEditPage />} />
+          <Route path="agents/:agentId/edit" element={<AgentEditPage />} />
+
+          {/* 沙箱 */}
           <Route path="sandboxes" element={<SandboxManagementPage />} />
+
+          {/* 模型与工具 */}
           <Route path="models" element={<ModelManagementPage />} />
           <Route path="prompts" element={<PromptManagementPage />} />
+
           <Route path="skills" element={<SkillManagementPage />} />
+          <Route path="skills/new" element={<SkillEditPage />} />
+          <Route path="skills/:skillId/edit" element={<SkillEditPage />} />
+
           <Route path="tools" element={<ToolManagementPage />} />
-          <Route path="debug" element={<DebugPlaceholderPage />} />
-          <Route path="members" element={<SpaceMembersPage />} />
+          <Route path="tools/new" element={<ToolEditPage />} />
+          <Route path="tools/:toolId/edit" element={<ToolEditPage />} />
+
+          {/* 待建设 */}
+          <Route
+            path="memory"
+            element={
+              <ComingSoonPage
+                title="记忆管理"
+                description="Agent 长短期记忆资产 · 子模块建设中"
+              />
+            }
+          />
+          <Route
+            path="knowledge"
+            element={
+              <ComingSoonPage
+                title="知识库管理"
+                description="向量知识库 / 检索增强能力 · 子模块建设中"
+              />
+            }
+          />
+          <Route
+            path="debug/agent-debug"
+            element={
+              <ComingSoonPage
+                title="Agent 调试"
+                description="单次调用、链路 Trace、工具回放 · 子模块建设中"
+              />
+            }
+          />
+          <Route
+            path="debug/agent-evaluation"
+            element={
+              <ComingSoonPage
+                title="Agent 评测"
+                description="评测集 / 跑批 / 指标对比 · 子模块建设中"
+              />
+            }
+          />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/platform/workbench" replace />} />

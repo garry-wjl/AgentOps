@@ -1,7 +1,10 @@
 import { PlusOutlined } from '@ant-design/icons';
-import { Badge, Button, Drawer, Form, Input, Select, Space, Table, Tag, Typography, message } from 'antd';
-import { useState } from 'react';
-import { mockTools, type ToolItem, type ToolStatus, type ToolType } from '@/mock/tools';
+import { Badge, Button, Input, Popconfirm, Space, Table, Tag, Typography, message } from 'antd';
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useSpaceResourceStore } from '@/stores/spaceResourceStore';
+import type { ToolItem, ToolStatus, ToolType } from '@/mock/tools';
+import { ellipsisCell } from '@/utils/listCell';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -18,46 +21,15 @@ const HEALTH = {
 } as const;
 
 export default function ToolManagementPage() {
-  const [list, setList] = useState<ToolItem[]>(mockTools);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [editing, setEditing] = useState<ToolItem | null>(null);
-  const [form] = Form.useForm();
+  const navigate = useNavigate();
+  const tools = useSpaceResourceStore((s) => s.tools);
+  const removeTool = useSpaceResourceStore((s) => s.removeTool);
+  const [keyword, setKeyword] = useState('');
 
-  function openEdit(t: ToolItem) {
-    setEditing(t);
-    form.setFieldsValue(t);
-    setDrawerOpen(true);
-  }
-
-  function openCreate() {
-    setEditing(null);
-    form.resetFields();
-    form.setFieldsValue({ type: 'MCP', authType: 'API_KEY' });
-    setDrawerOpen(true);
-  }
-
-  function handleSubmit() {
-    form.validateFields().then((v) => {
-      if (editing) {
-        setList((prev) => prev.map((it) => (it.id === editing.id ? { ...it, ...v } : it)));
-      } else {
-        setList((prev) => [
-          {
-            id: `tl-${Date.now()}`,
-            num: `TL${Date.now()}001`,
-            status: 'ENABLED',
-            health: 'UNKNOWN',
-            updatedBy: '当前用户',
-            updatedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
-            ...v,
-          },
-          ...prev,
-        ]);
-      }
-      message.success('已保存');
-      setDrawerOpen(false);
-    });
-  }
+  const filtered = useMemo(
+    () => tools.filter((t) => !keyword || t.name.includes(keyword) || t.num.includes(keyword)),
+    [tools, keyword],
+  );
 
   return (
     <div className="page-section">
@@ -71,7 +43,13 @@ export default function ToolManagementPage() {
           </Paragraph>
         </div>
         <Space>
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+          <Input.Search
+            placeholder="搜索名称或编码"
+            allowClear
+            onSearch={setKeyword}
+            style={{ width: 240 }}
+          />
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('new')}>
             注册工具
           </Button>
         </Space>
@@ -79,30 +57,33 @@ export default function ToolManagementPage() {
 
       <Table
         rowKey="id"
-        dataSource={list}
+        dataSource={filtered}
         pagination={{ pageSize: 10 }}
+        scroll={{ x: 1280 }}
+        tableLayout="fixed"
         columns={[
+          {
+            title: '编码',
+            dataIndex: 'num',
+            width: 240,
+            fixed: 'left',
+            render: (v: string) => <Text code>{v}</Text>,
+          },
           {
             title: '名称',
             dataIndex: 'name',
-            render: (v, r) => (
-              <Space direction="vertical" size={0}>
-                <Text strong>{v}</Text>
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  {r.num}
-                </Text>
-              </Space>
-            ),
+            width: 200,
+            render: (v: string) => <Text strong>{v}</Text>,
           },
-          { title: 'Key', dataIndex: 'toolKey', render: (v) => <Text code>{v}</Text> },
+          { title: 'Key', dataIndex: 'toolKey', width: 200, render: (v: string) => <Text code>{v}</Text> },
           {
             title: '类型',
             dataIndex: 'type',
-            width: 100,
+            width: 110,
             render: (t: ToolType) => <Tag color={t === 'MCP' ? 'geekblue' : 'gold'}>{t}</Tag>,
           },
-          { title: 'Endpoint', dataIndex: 'endpoint', ellipsis: true },
-          { title: '认证', dataIndex: 'authType', width: 80, render: (v) => <Tag>{v}</Tag> },
+          { title: 'Endpoint', dataIndex: 'endpoint', width: 280, render: (v: string) => ellipsisCell(v) },
+          { title: '认证', dataIndex: 'authType', width: 90, render: (v: string) => <Tag>{v}</Tag> },
           {
             title: '健康',
             dataIndex: 'health',
@@ -119,64 +100,27 @@ export default function ToolManagementPage() {
           },
           {
             title: '操作',
-            width: 160,
-            render: (_, r) => (
+            width: 200,
+            fixed: 'right',
+            render: (_: unknown, r: ToolItem) => (
               <Space>
-                <a onClick={() => openEdit(r)}>查看</a>
-                <a onClick={() => openEdit(r)}>编辑</a>
+                <a onClick={() => navigate(`${r.id}/edit`)}>查看</a>
+                <a onClick={() => navigate(`${r.id}/edit`)}>编辑</a>
                 <a>测试调用</a>
+                <Popconfirm
+                  title={`确定删除 ${r.name}？`}
+                  onConfirm={() => {
+                    removeTool(r.id);
+                    message.success('已删除');
+                  }}
+                >
+                  <a style={{ color: '#ff4d4f' }}>删除</a>
+                </Popconfirm>
               </Space>
             ),
           },
         ]}
       />
-
-      <Drawer
-        title={editing ? `编辑工具 - ${editing.name}` : '注册工具'}
-        width={520}
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        extra={
-          <Space>
-            <Button onClick={() => setDrawerOpen(false)}>取消</Button>
-            <Button type="primary" onClick={handleSubmit}>
-              保存
-            </Button>
-          </Space>
-        }
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item name="name" label="工具名称" rules={[{ required: true }]}>
-            <Input maxLength={50} />
-          </Form.Item>
-          <Form.Item name="toolKey" label="Key" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item name="type" label="类型" rules={[{ required: true }]}>
-            <Select
-              options={[
-                { value: 'MCP', label: 'MCP 协议' },
-                { value: 'FUNCTION_CALL', label: 'Function Call' },
-              ]}
-            />
-          </Form.Item>
-          <Form.Item name="endpoint" label="Endpoint">
-            <Input placeholder="https://..." />
-          </Form.Item>
-          <Form.Item name="authType" label="认证方式">
-            <Select
-              options={[
-                { value: 'NONE', label: '无' },
-                { value: 'API_KEY', label: 'API Key' },
-                { value: 'OAUTH', label: 'OAuth' },
-              ]}
-            />
-          </Form.Item>
-          <Form.Item name="description" label="描述">
-            <Input.TextArea rows={2} />
-          </Form.Item>
-        </Form>
-      </Drawer>
     </div>
   );
 }

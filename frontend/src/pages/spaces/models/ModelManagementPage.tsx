@@ -2,6 +2,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import { Badge, Button, Drawer, Form, Input, InputNumber, Select, Space, Table, Tag, Typography, message } from 'antd';
 import { useState } from 'react';
 import { mockModels, type ModelItem, type ModelStatus } from '@/mock/models';
+import { ellipsisCell } from '@/utils/listCell';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -87,26 +88,30 @@ export default function ModelManagementPage() {
         rowKey="id"
         dataSource={list}
         pagination={{ pageSize: 10 }}
+        scroll={{ x: 1320 }}
+        tableLayout="fixed"
         columns={[
+          {
+            title: '编码',
+            dataIndex: 'num',
+            width: 240,
+            fixed: 'left',
+            render: (v: string) => <Text code>{v}</Text>,
+          },
           {
             title: '名称',
             dataIndex: 'name',
-            render: (v, r) => (
-              <Space direction="vertical" size={0}>
-                <Text strong>{v}</Text>
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  {r.num}
-                </Text>
-              </Space>
-            ),
+            width: 200,
+            render: (v: string) => <Text strong>{v}</Text>,
           },
           {
             title: '供应商',
             dataIndex: 'provider',
+            width: 140,
             render: (p) => <Tag color="purple">{PROVIDERS.find((x) => x.value === p)?.label}</Tag>,
           },
           { title: 'Model ID', dataIndex: 'modelId', width: 180 },
-          { title: 'Endpoint', dataIndex: 'endpoint' },
+          { title: 'Endpoint', dataIndex: 'endpoint', width: 280, render: (v: string) => ellipsisCell(v) },
           {
             title: 'API Key',
             dataIndex: 'hasApiKey',
@@ -135,6 +140,7 @@ export default function ModelManagementPage() {
           {
             title: '操作',
             width: 160,
+            fixed: 'right',
             render: (_, r) => (
               <Space>
                 <a onClick={() => openEdit(r)}>编辑</a>

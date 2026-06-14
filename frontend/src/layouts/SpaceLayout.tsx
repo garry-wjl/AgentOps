@@ -2,14 +2,16 @@ import {
   AppstoreOutlined,
   ApiOutlined,
   ApartmentOutlined,
+  BookOutlined,
+  BugOutlined,
   CodeOutlined,
+  DatabaseOutlined,
   DownOutlined,
   ExperimentOutlined,
   FileTextOutlined,
-  FunctionOutlined,
+  FundOutlined,
   HomeOutlined,
   RobotOutlined,
-  TeamOutlined,
   ThunderboltOutlined,
   ToolOutlined,
 } from '@ant-design/icons';
@@ -23,7 +25,7 @@ const { Sider, Content } = Layout;
 
 /**
  * 空间 Shell：顶部 Logo + 当前空间下拉（切换空间）+ 用户菜单；
- * 左侧分组：Agent 与沙箱 / 模型与工具 / 调试与评测 / 空间成员（仅管理员）。
+ * 左侧分组：Agent 与沙箱 / 模型与工具 / 调试与评测。
  */
 export default function SpaceLayout() {
   const navigate = useNavigate();
@@ -74,6 +76,16 @@ export default function SpaceLayout() {
           icon: <ToolOutlined />,
           label: '工具管理',
         },
+        {
+          key: `/spaces/${spaceId}/memory`,
+          icon: <DatabaseOutlined />,
+          label: '记忆管理',
+        },
+        {
+          key: `/spaces/${spaceId}/knowledge`,
+          icon: <BookOutlined />,
+          label: '知识库管理',
+        },
       ],
     },
     {
@@ -82,23 +94,17 @@ export default function SpaceLayout() {
       label: '调试与评测',
       children: [
         {
-          key: `/spaces/${spaceId}/debug`,
-          icon: <ExperimentOutlined />,
-          label: '能力建设中',
-          disabled: true,
+          key: `/spaces/${spaceId}/debug/agent-debug`,
+          icon: <BugOutlined />,
+          label: 'Agent 调试',
+        },
+        {
+          key: `/spaces/${spaceId}/debug/agent-evaluation`,
+          icon: <FundOutlined />,
+          label: 'Agent 评测',
         },
       ],
     },
-    { type: 'divider' },
-    ...(space.myRole === 'ADMIN'
-      ? [
-          {
-            key: `/spaces/${spaceId}/members`,
-            icon: <TeamOutlined />,
-            label: '空间成员',
-          },
-        ]
-      : []),
   ];
 
   // 找到与当前 URL 匹配的最长 key
