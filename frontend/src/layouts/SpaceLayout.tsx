@@ -17,21 +17,44 @@ import {
 } from '@ant-design/icons';
 import { Dropdown, Layout, Menu, Tag } from 'antd';
 import type { MenuProps } from 'antd';
+import { useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import BrandHeader from '@/layouts/BrandHeader';
-import { findSpace, mockSpaces } from '@/mock/spaces';
+import { getSpace, pageMine, type SpaceCardVO, type SpaceDTO } from '@/api/space';
+import { notifyError } from '@/utils/request';
 
 const { Sider, Content } = Layout;
 
 /**
  * 空间 Shell：顶部 Logo + 当前空间下拉（切换空间）+ 用户菜单；
  * 左侧分组：Agent 与沙箱 / 模型与工具 / 调试与评测。
+ *
+ * 数据来源：
+ * - 当前空间详情：/spaces/get?code={spaceCode}
+ * - 空间切换下拉：/spaces/page-mine
+ *
+ * 路由参数 :spaceId 实际上是空间业务编码 SpaceDTO.num，沿用 spaceId 命名仅为不动子页面路由。
  */
 export default function SpaceLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { spaceId = '' } = useParams();
-  const space = findSpace(spaceId) ?? mockSpaces[0];
+
+  const [space, setSpace] = useState<SpaceDTO | null>(null);
+  const [mySpaces, setMySpaces] = useState<SpaceCardVO[]>([]);
+
+  useEffect(() => {
+    if (!spaceId) return;
+    getSpace(spaceId)
+      .then(setSpace)
+      .catch((err) => notifyError(err, '加载空间信息失败'));
+  }, [spaceId]);
+
+  useEffect(() => {
+    pageMine(undefined, 1, 50)
+      .then((res) => setMySpaces(res.records ?? []))
+      .catch((err) => notifyError(err, '加载空间下拉失败'));
+  }, []);
 
   const items: MenuProps['items'] = [
     {
@@ -113,13 +136,13 @@ export default function SpaceLayout() {
     .filter((k) => location.pathname.startsWith(k))
     .sort((a, b) => b.length - a.length)[0];
 
-  const switchItems = mockSpaces.map((s) => ({
-    key: s.id,
+  const switchItems = mySpaces.map((s) => ({
+    key: s.num,
     label: (
       <div className="space-switch-item">
         <span>{s.name}</span>
-        <Tag color={s.myRole === 'ADMIN' ? 'blue' : 'green'} bordered={false}>
-          {s.myRole === 'ADMIN' ? '管理' : '成员'}
+        <Tag color={s.currentUserRole === 'ADMIN' ? 'blue' : 'green'} bordered={false}>
+          {s.currentUserRole === 'ADMIN' ? '管理' : '成员'}
         </Tag>
       </div>
     ),
@@ -151,7 +174,7 @@ export default function SpaceLayout() {
             >
               <button type="button" className="header-link-button header-link-button--space">
                 <ApartmentOutlined />
-                <span>{space.name}</span>
+                <span>{space?.name ?? '加载中…'}</span>
                 <DownOutlined className="header-link-button-arrow" />
               </button>
             </Dropdown>

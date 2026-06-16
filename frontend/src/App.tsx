@@ -5,17 +5,23 @@ import PlatformLayout from '@/layouts/PlatformLayout';
 import SpaceLayout from '@/layouts/SpaceLayout';
 import PlatformWorkbenchPage from '@/pages/platform/workbench/PlatformWorkbenchPage';
 import SpaceListPage from '@/pages/platform/spaces/SpaceListPage';
+import SpaceEditPage from '@/pages/platform/spaces/SpaceEditPage';
 import UserManagementPage from '@/pages/users/UserManagementPage';
 import SystemSettingsPage from '@/pages/platform/system-settings/SystemSettingsPage';
 import AgentManagementPage from '@/pages/spaces/agents/AgentManagementPage';
 import AgentEditPage from '@/pages/spaces/agents/AgentEditPage';
 import SandboxManagementPage from '@/pages/spaces/sandboxes/SandboxManagementPage';
+import SandboxEditPage from '@/pages/spaces/sandboxes/SandboxEditPage';
 import ModelManagementPage from '@/pages/spaces/models/ModelManagementPage';
+import ModelEditPage from '@/pages/spaces/models/ModelEditPage';
 import PromptManagementPage from '@/pages/spaces/prompts/PromptManagementPage';
+import PromptDetailPage from '@/pages/spaces/prompts/PromptDetailPage';
+import PromptEditPage from '@/pages/spaces/prompts/PromptEditPage';
 import SkillManagementPage from '@/pages/spaces/skills/SkillManagementPage';
 import SkillEditPage from '@/pages/spaces/skills/SkillEditPage';
 import ToolManagementPage from '@/pages/spaces/tools/ToolManagementPage';
 import ToolEditPage from '@/pages/spaces/tools/ToolEditPage';
+import ToolTestPage from '@/pages/spaces/tools/ToolTestPage';
 import ComingSoonPage from '@/components/ComingSoonPage';
 import { AdminGuard, AuthGuard } from '@/routes/Guards';
 
@@ -40,6 +46,8 @@ export default function App() {
           <Route index element={<Navigate to="workbench" replace />} />
           <Route path="workbench" element={<PlatformWorkbenchPage />} />
           <Route path="spaces" element={<SpaceListPage />} />
+          <Route path="spaces/new" element={<SpaceEditPage />} />
+          <Route path="spaces/:spaceCode/edit" element={<SpaceEditPage />} />
           <Route element={<AdminGuard />}>
             <Route path="users" element={<UserManagementPage />} />
             <Route path="system-settings" element={<SystemSettingsPage />} />
@@ -55,14 +63,21 @@ export default function App() {
           {/* Agent */}
           <Route path="agents" element={<AgentManagementPage />} />
           <Route path="agents/new" element={<AgentEditPage />} />
-          <Route path="agents/:agentId/edit" element={<AgentEditPage />} />
+          <Route path="agents/:agentNum/edit" element={<AgentEditPage />} />
 
           {/* 沙箱 */}
           <Route path="sandboxes" element={<SandboxManagementPage />} />
+          <Route path="sandboxes/new" element={<SandboxEditPage />} />
+          <Route path="sandboxes/:sandboxNum/edit" element={<SandboxEditPage />} />
 
           {/* 模型与工具 */}
           <Route path="models" element={<ModelManagementPage />} />
+          <Route path="models/new" element={<ModelEditPage />} />
+          <Route path="models/:modelNum/edit" element={<ModelEditPage />} />
           <Route path="prompts" element={<PromptManagementPage />} />
+          <Route path="prompts/new" element={<PromptEditPage />} />
+          <Route path="prompts/:promptNum" element={<PromptDetailPage />} />
+          <Route path="prompts/:promptNum/edit" element={<PromptEditPage />} />
 
           <Route path="skills" element={<SkillManagementPage />} />
           <Route path="skills/new" element={<SkillEditPage />} />
@@ -70,7 +85,8 @@ export default function App() {
 
           <Route path="tools" element={<ToolManagementPage />} />
           <Route path="tools/new" element={<ToolEditPage />} />
-          <Route path="tools/:toolId/edit" element={<ToolEditPage />} />
+          <Route path="tools/:toolNum/edit" element={<ToolEditPage />} />
+          <Route path="tools/:toolNum/test" element={<ToolTestPage />} />
 
           {/* 待建设 */}
           <Route

@@ -1,91 +1,102 @@
-import { PlusOutlined } from '@ant-design/icons';
-import { Button, Drawer, Form, Input, Select, Space, Table, Tag, Typography, message } from 'antd';
-import { useMemo, useState } from 'react';
-import { mockPrompts, type PromptItem, type PromptStatus } from '@/mock/prompts';
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { Button, Input, Popconfirm, Select, Space, Table, Tag, Typography, message } from 'antd';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import {
+  deletePrompt,
+  disablePrompt,
+  enablePrompt,
+  pagePrompts,
+  submitPrompt,
+  type PromptStatus,
+  type PromptVO,
+} from '@/api/prompt';
+import { notifyError } from '@/utils/request';
 
 const { Title, Paragraph, Text } = Typography;
 
+/**
+ * Prompt 状态展示。
+ */
 const STATUS: Record<PromptStatus, { color: string; label: string }> = {
   DRAFT: { color: 'default', label: '草稿' },
   ENABLED: { color: 'green', label: '启用' },
   DISABLED: { color: 'red', label: '禁用' },
 };
 
+const PAGE_SIZE = 10;
+
 /**
- * Prompt 管理 —— 列表 + 双栏 Markdown 编辑器（编辑/预览）。
+ * Prompt 管理列表页（空间内）。
+ *
+ * 列表/启停/删除在本页完成；新建/编辑跳转到独立全页编辑：
+ *   /spaces/:spaceId/prompts/new
+ *   /spaces/:spaceId/prompts/:promptNum/edit
  */
 export default function PromptManagementPage() {
-  const [list, setList] = useState<PromptItem[]>(mockPrompts);
-  const [keyword, setKeyword] = useState('');
-  const [statusFilter, setStatusFilter] = useState<PromptStatus | 'ALL'>('ALL');
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [editing, setEditing] = useState<PromptItem | null>(null);
-  const [content, setContent] = useState('');
-  const [form] = Form.useForm();
+  const navigate = useNavigate();
+  const { spaceId = '' } = useParams();
+  const spaceCode = spaceId;
 
-  const filtered = useMemo(
-    () =>
-      list.filter(
-        (p) =>
-          (statusFilter === 'ALL' || p.status === statusFilter) &&
-          (!keyword ||
-            p.name.includes(keyword) ||
-            p.promptKey.includes(keyword) ||
-            (p.remark || '').includes(keyword)),
-      ),
-    [list, keyword, statusFilter],
+  const [list, setList] = useState<PromptVO[]>([]);
+  const [total, setTotal] = useState(0);
+  const [pageNo, setPageNo] = useState(1);
+  const [keyword, setKeyword] = useState('');
+  const [statusFilter, setStatusFilter] = useState<PromptStatus | ''>('');
+  const [loading, setLoading] = useState(false);
+
+  /** 加载分页列表。 */
+  const load = useCallback(
+    async (nextPage = pageNo, k = keyword, s: PromptStatus | '' = statusFilter) => {
+      if (!spaceCode) return;
+      setLoading(true);
+      try {
+        const result = await pagePrompts(spaceCode, {
+          keyword: k || undefined,
+          status: s || undefined,
+          pageNo: nextPage,
+          pageSize: PAGE_SIZE,
+        });
+        setList(result.records ?? []);
+        setTotal(result.total ?? 0);
+        setPageNo(result.pageNo ?? nextPage);
+      } catch (err) {
+        notifyError(err, '加载 Prompt 列表失败');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [spaceCode, pageNo, keyword, statusFilter],
   );
 
-  const variables = useMemo(() => parseVariables(content), [content]);
+  useEffect(() => {
+    load(1, '', '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spaceCode]);
 
-  function openCreate() {
-    setEditing(null);
-    setContent('');
-    form.resetFields();
-    setDrawerOpen(true);
+  /** 列表行内"提交/启用/禁用"。 */
+  async function handleStatusAction(row: PromptVO, action: 'submit' | 'enable' | 'disable') {
+    try {
+      if (action === 'submit') await submitPrompt(row.num);
+      else if (action === 'enable') await enablePrompt(row.num);
+      else await disablePrompt(row.num);
+      message.success('操作成功');
+      await load(pageNo, keyword, statusFilter);
+    } catch (err) {
+      notifyError(err, '操作失败');
+    }
   }
 
-  function openEdit(p: PromptItem) {
-    setEditing(p);
-    setContent(p.content);
-    form.setFieldsValue(p);
-    setDrawerOpen(true);
-  }
-
-  function handleSubmit(submit: boolean) {
-    form.validateFields().then((values) => {
-      if (editing) {
-        setList((prev) =>
-          prev.map((it) =>
-            it.id === editing.id
-              ? {
-                  ...it,
-                  ...values,
-                  content,
-                  variables,
-                  status: submit ? 'ENABLED' : it.status,
-                  updatedBy: '当前用户',
-                  updatedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
-                }
-              : it,
-          ),
-        );
-      } else {
-        const it: PromptItem = {
-          id: `pr-${Date.now()}`,
-          num: submit ? `PR${Date.now()}001` : '',
-          ...values,
-          content,
-          variables,
-          status: submit ? 'ENABLED' : 'DRAFT',
-          updatedBy: '当前用户',
-          updatedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
-        };
-        setList((prev) => [it, ...prev]);
-      }
-      message.success(submit ? '已提交，状态：启用' : '草稿已保存');
-      setDrawerOpen(false);
-    });
+  async function handleDelete(row: PromptVO) {
+    try {
+      await deletePrompt(row.num);
+      message.success('已删除');
+      const newTotal = total - 1;
+      const lastPage = Math.max(1, Math.ceil(newTotal / PAGE_SIZE));
+      await load(Math.min(pageNo, lastPage), keyword, statusFilter);
+    } catch (err) {
+      notifyError(err, '删除失败');
+    }
   }
 
   return (
@@ -100,11 +111,23 @@ export default function PromptManagementPage() {
           </Paragraph>
         </div>
         <Space>
-          <Input.Search placeholder="搜索名称/Key/备注" allowClear onSearch={setKeyword} style={{ width: 260 }} />
+          <Input.Search
+            placeholder="搜索名称/Key/备注"
+            allowClear
+            onSearch={(v) => {
+              setKeyword(v);
+              load(1, v, statusFilter);
+            }}
+            style={{ width: 260 }}
+          />
           <Select
-            value={statusFilter}
-            onChange={setStatusFilter}
+            value={statusFilter || 'ALL'}
             style={{ width: 120 }}
+            onChange={(v) => {
+              const s = v === 'ALL' ? '' : (v as PromptStatus);
+              setStatusFilter(s);
+              load(1, keyword, s);
+            }}
             options={[
               { value: 'ALL', label: '全部状态' },
               { value: 'DRAFT', label: '草稿' },
@@ -112,25 +135,32 @@ export default function PromptManagementPage() {
               { value: 'DISABLED', label: '禁用' },
             ]}
           />
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('new')}>
             新建 Prompt
           </Button>
         </Space>
       </div>
 
-      <Table
-        rowKey="id"
-        dataSource={filtered}
-        pagination={{ pageSize: 10 }}
+      <Table<PromptVO>
+        rowKey="num"
+        loading={loading}
+        dataSource={list}
+        pagination={{
+          current: pageNo,
+          total,
+          pageSize: PAGE_SIZE,
+          showSizeChanger: false,
+          onChange: (p) => load(p, keyword, statusFilter),
+        }}
         scroll={{ x: 1280 }}
         tableLayout="fixed"
         columns={[
           {
             title: '编码',
             dataIndex: 'num',
-            width: 240,
+            width: 220,
             fixed: 'left',
-            render: (v: string) => <Text code>{v || '草稿未生成'}</Text>,
+            render: (v: string) => <Text code>{v}</Text>,
           },
           {
             title: '名称',
@@ -138,16 +168,16 @@ export default function PromptManagementPage() {
             width: 200,
             render: (v: string) => <Text strong>{v}</Text>,
           },
-          { title: 'Key', dataIndex: 'promptKey', width: 240, render: (v) => <Text code>{v}</Text> },
+          { title: 'Key', dataIndex: 'key', width: 220, render: (v: string) => <Text code>{v}</Text> },
           {
             title: '变量',
-            width: 240,
-            render: (_, r) => (
+            dataIndex: 'variables',
+            width: 220,
+            render: (vars?: string[]) => (
               <Space wrap size={4}>
-                {r.variables.map((v) => (
-                  <Tag key={v} color="cyan">
-                    {`{{${v}}}`}
-                  </Tag>
+                {(!vars || vars.length === 0) && <Text type="secondary">—</Text>}
+                {vars?.map((v) => (
+                  <Tag key={v} color="cyan">{`{{${v}}}`}</Tag>
                 ))}
               </Space>
             ),
@@ -158,127 +188,36 @@ export default function PromptManagementPage() {
             width: 90,
             render: (s: PromptStatus) => <Tag color={STATUS[s].color}>{STATUS[s].label}</Tag>,
           },
-          { title: '最近修改', dataIndex: 'updatedBy', width: 120 },
-          { title: '更新时间', dataIndex: 'updatedAt', width: 160 },
+          { title: '更新时间', dataIndex: 'updateTime', width: 160 },
           {
             title: '操作',
-            width: 200,
+            width: 280,
             fixed: 'right',
-            render: (_, r) => (
+            render: (_: unknown, r: PromptVO) => (
               <Space>
-                <a onClick={() => openEdit(r)}>查看</a>
-                <a onClick={() => openEdit(r)}>编辑</a>
-                {r.status === 'DRAFT' && <a>提交</a>}
-                {r.status === 'ENABLED' && <a>禁用</a>}
-                {r.status === 'DISABLED' && <a>启用</a>}
+                <a onClick={() => navigate(`${r.num}`)}>详情</a>
+                <a onClick={() => navigate(`${r.num}/edit`)}>编辑</a>
+                {r.status === 'DRAFT' && <a onClick={() => handleStatusAction(r, 'submit')}>提交</a>}
+                {r.status === 'ENABLED' && <a onClick={() => handleStatusAction(r, 'disable')}>禁用</a>}
+                {r.status === 'DISABLED' && <a onClick={() => handleStatusAction(r, 'enable')}>启用</a>}
+                {r.status === 'DRAFT' && (
+                  <Popconfirm
+                    title="确认删除该 Prompt？"
+                    okText="删除"
+                    okButtonProps={{ danger: true }}
+                    cancelText="取消"
+                    onConfirm={() => handleDelete(r)}
+                  >
+                    <a style={{ color: '#ff4d4f' }}>
+                      <DeleteOutlined /> 删除
+                    </a>
+                  </Popconfirm>
+                )}
               </Space>
             ),
           },
         ]}
       />
-
-      <Drawer
-        title={editing ? `编辑 Prompt - ${editing.name}` : '新建 Prompt'}
-        width={1080}
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        extra={
-          <Space>
-            <Button onClick={() => setDrawerOpen(false)}>取消</Button>
-            {(!editing || editing.status === 'DRAFT') && (
-              <>
-                <Button onClick={() => handleSubmit(false)}>保存为草稿</Button>
-                <Button type="primary" onClick={() => handleSubmit(true)}>
-                  保存并提交
-                </Button>
-              </>
-            )}
-            {editing && editing.status !== 'DRAFT' && (
-              <Button type="primary" onClick={() => handleSubmit(false)}>
-                保存
-              </Button>
-            )}
-          </Space>
-        }
-      >
-        <div className="prompt-editor">
-          <div className="prompt-editor-meta">
-            <Form form={form} layout="vertical">
-              <Form.Item label="业务编码">
-                <Input value={editing?.num || '系统提交后生成'} disabled />
-              </Form.Item>
-              <Form.Item name="name" label="名称" rules={[{ required: true }]}>
-                <Input maxLength={50} />
-              </Form.Item>
-              <Form.Item
-                name="promptKey"
-                label="Key"
-                rules={[
-                  { required: true, message: '请输入 Key' },
-                  { pattern: /^[A-Za-z0-9_-]{1,64}$/, message: '英文字母/数字/下划线/中划线，1～64 字符' },
-                ]}
-              >
-                <Input
-                  placeholder="customer_service_opening"
-                  disabled={!!editing && editing.status !== 'DRAFT'}
-                />
-              </Form.Item>
-              <Form.Item label="状态">
-                <Tag color={editing ? STATUS[editing.status].color : 'default'}>
-                  {editing ? STATUS[editing.status].label : '草稿'}
-                </Tag>
-              </Form.Item>
-              <Form.Item name="remark" label="备注">
-                <Input.TextArea rows={2} maxLength={200} />
-              </Form.Item>
-              <Form.Item label="变量列表（保存后自动解析）">
-                <Space wrap size={4}>
-                  {variables.length === 0 && <Text type="secondary">暂无</Text>}
-                  {variables.map((v) => (
-                    <Tag key={v} color="cyan">{`{{${v}}}`}</Tag>
-                  ))}
-                </Space>
-              </Form.Item>
-            </Form>
-          </div>
-          <div className="prompt-editor-main">
-            <div className="prompt-editor-pane">
-              <div className="pane-title">编辑</div>
-              <Input.TextArea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                rows={22}
-                placeholder="Markdown 内容，支持 {{变量}} 占位"
-              />
-            </div>
-            <div className="prompt-editor-pane">
-              <div className="pane-title">预览</div>
-              <pre className="markdown-preview">{highlight(content)}</pre>
-            </div>
-          </div>
-        </div>
-      </Drawer>
     </div>
-  );
-}
-
-function parseVariables(text: string): string[] {
-  const set = new Set<string>();
-  const re = /\{\{([A-Za-z_][A-Za-z0-9_]{0,31})\}\}/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(text))) set.add(m[1]);
-  return Array.from(set);
-}
-
-function highlight(text: string): React.ReactNode {
-  const parts = text.split(/(\{\{[A-Za-z_][A-Za-z0-9_]{0,31}\}\})/g);
-  return parts.map((p, i) =>
-    /^\{\{[A-Za-z_][A-Za-z0-9_]{0,31}\}\}$/.test(p) ? (
-      <span key={i} className="var-token">
-        {p}
-      </span>
-    ) : (
-      <span key={i}>{p}</span>
-    ),
   );
 }

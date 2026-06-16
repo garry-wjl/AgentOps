@@ -1,4 +1,5 @@
 import { request } from '@/utils/request';
+import type { PageWrapper } from '@/api/space';
 
 export interface AgentDTO {
   num: string;
@@ -45,8 +46,29 @@ export interface PrePublishCheckVO {
   warnings: { field: string; code: string; message: string }[];
 }
 
-export function createAgent(spaceCode: string, name: string, displayName?: string, description?: string, tags?: string[], remark?: string, versionNo?: string, initialAssembly?: AssemblySnapshotDTO): Promise<AgentDTO> {
-  return request<AgentDTO>({ url: '/agents/create', method: 'POST', data: { spaceCode, name, displayName, description, tags, remark, versionNo, initialAssembly } });
+/**
+ * Agent 主体生命周期状态。
+ */
+export type AgentStatus = 'DRAFT' | 'EFFECTIVE' | 'WITHDRAWN';
+
+/**
+ * Agent 版本生命周期状态。
+ */
+export type AgentVersionStatus = 'DRAFT' | 'ONLINE' | 'OFFLINE';
+
+export function createAgent(
+  spaceCode: string,
+  data: {
+    name: string;
+    displayName?: string;
+    description?: string;
+    tags?: string[];
+    remark?: string;
+    versionNo?: string;
+    initialAssembly?: AssemblySnapshotDTO;
+  },
+): Promise<AgentDTO> {
+  return request<AgentDTO>({ url: '/agents/create', method: 'POST', data: { spaceCode, ...data } });
 }
 
 export function updateAgentBasic(num: string, data: { displayName?: string; description?: string; tags?: string[]; remark?: string }): Promise<AgentDTO> {
@@ -77,6 +99,13 @@ export function listAgentVersions(agentCode: string): Promise<AgentVersionDTO[]>
   return request<AgentVersionDTO[]>({ url: '/agents/versions', method: 'GET', params: { agentCode } });
 }
 
+/**
+ * 查询 Agent 单个版本详情。
+ */
+export function getAgentVersion(num: string): Promise<AgentVersionDTO> {
+  return request<AgentVersionDTO>({ url: '/agents/version-get', method: 'GET', params: { num } });
+}
+
 export function deriveAgentVersion(agentCode: string, sourceVersionCode: string, newVersionNo: string): Promise<AgentVersionDTO> {
   return request<AgentVersionDTO>({ url: '/agent-versions/derive-draft', method: 'POST', data: { agentCode, sourceVersionCode, newVersionNo } });
 }
@@ -99,4 +128,38 @@ export function offlineAgentVersion(num: string): Promise<AgentVersionDTO> {
 
 export function deleteAgentVersion(num: string): Promise<boolean> {
   return request<boolean>({ url: '/agent-versions/delete-draft', method: 'POST', data: { num } });
+}
+
+/**
+ * Agent 列表视图对象（分页接口返回）。
+ */
+export interface AgentVO {
+  num: string;
+  name: string;
+  displayName?: string;
+  description?: string;
+  currentVersionNo?: string;
+  status: AgentStatus;
+  tags?: string[];
+  updateTime: string;
+}
+
+/**
+ * Agent 分页查询。
+ */
+export function pageAgents(
+  spaceCode: string,
+  params: { keyword?: string; status?: AgentStatus | ''; pageNo?: number; pageSize?: number } = {},
+): Promise<PageWrapper<AgentVO>> {
+  return request<PageWrapper<AgentVO>>({
+    url: '/agents/page',
+    method: 'GET',
+    params: {
+      spaceCode,
+      keyword: params.keyword,
+      status: params.status,
+      pageNo: params.pageNo ?? 1,
+      pageSize: params.pageSize ?? 10,
+    },
+  });
 }

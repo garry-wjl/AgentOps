@@ -555,6 +555,21 @@ body {
 }
 
 /* ===================== 通用 page-section ===================== */
+.page-breadcrumb {
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #4e5969;
+}
+.page-breadcrumb a {
+  color: #4e5969;
+}
+.page-breadcrumb a:hover {
+  color: #1677ff;
+}
+.page-breadcrumb .anticon {
+  margin-right: 4px;
+}
+
 .page-section {
   background: #ffffff;
   padding: 20px 24px;

@@ -66,19 +66,19 @@ export const useSpaceResourceStore = create<SpaceResourceState>((set, get) => ({
   },
 
   async createAgent(spaceCode, name, assembly) {
-    const result = await agentApi.createAgent(spaceCode, name, name, '', [], '', '1.0.0', assembly);
+    const result = await agentApi.createAgent(spaceCode, { name, displayName: name, versionNo: '1.0.0', initialAssembly: assembly });
     set((s) => ({ agents: [result as unknown as AgentItem, ...s.agents] }));
     return result;
   },
 
   async createSkill(spaceCode, name, description, skillMd) {
-    const result = await skillApi.createSkill(spaceCode, name, description, [], '', skillMd);
+    const result = await skillApi.createSkill(spaceCode, { name, description, initialSkillMd: skillMd });
     set((s) => ({ skills: [result as SkillItem, ...s.skills] }));
     return result;
   },
 
   async createTool(spaceCode, name, type, subType, configJson) {
-    const result = await toolApi.createTool(spaceCode, name, type, subType, configJson);
+    const result = await toolApi.createTool(spaceCode, { name, type: type as any, subType: subType as any, configJson });
     set((s) => ({ tools: [result as ToolItem, ...s.tools] }));
     return result;
   },

@@ -70,6 +70,10 @@ export function removeMember(spaceCode: string, userCode: string): Promise<Space
   return request<SpaceDTO>({ url: '/spaces/remove-member', method: 'POST', data: { spaceCode, userCode } });
 }
 
+export function changeMemberRole(spaceCode: string, userCode: string, roleType: string): Promise<SpaceDTO> {
+  return request<SpaceDTO>({ url: '/spaces/change-member-role', method: 'POST', data: { spaceCode, userCode, roleType } });
+}
+
 export function deleteSpace(spaceCode: string, confirmName: string): Promise<boolean> {
   return request<boolean>({ url: '/spaces/delete', method: 'POST', data: { spaceCode, confirmName } });
 }

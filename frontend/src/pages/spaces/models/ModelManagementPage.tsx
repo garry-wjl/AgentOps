@@ -1,69 +1,113 @@
-import { PlusOutlined } from '@ant-design/icons';
-import { Badge, Button, Drawer, Form, Input, InputNumber, Select, Space, Table, Tag, Typography, message } from 'antd';
-import { useState } from 'react';
-import { mockModels, type ModelItem, type ModelStatus } from '@/mock/models';
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import {
+  Button,
+  Input,
+  Popconfirm,
+  Select,
+  Space,
+  Table,
+  Tag,
+  Typography,
+  message,
+} from 'antd';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import {
+  deleteModel,
+  disableModel,
+  enableModel,
+  pageModels,
+  type ModelStatus,
+  type ModelVO,
+} from '@/api/model';
 import { ellipsisCell } from '@/utils/listCell';
+import { notifyError } from '@/utils/request';
 
 const { Title, Paragraph, Text } = Typography;
 
-const STATUS: Record<ModelStatus, { color: string; label: string }> = {
+/**
+ * 状态枚举展示配置。
+ */
+const STATUS_OPTIONS: Record<ModelStatus, { color: string; label: string }> = {
   DRAFT: { color: 'default', label: '草稿' },
   ENABLED: { color: 'green', label: '启用' },
   DISABLED: { color: 'red', label: '禁用' },
 };
 
-const HEALTH: Record<ModelItem['health'], { color: string; label: string }> = {
-  HEALTHY: { color: 'success', label: '健康' },
-  DEGRADED: { color: 'warning', label: '降级' },
-  UNKNOWN: { color: 'default', label: '未知' },
-};
+const PAGE_SIZE = 10;
 
-const PROVIDERS: { value: ModelItem['provider']; label: string }[] = [
-  { value: 'OPENAI', label: 'OpenAI' },
-  { value: 'ANTHROPIC', label: 'Anthropic' },
-  { value: 'AZURE', label: 'Azure OpenAI' },
-  { value: 'OLLAMA', label: 'Ollama 本地' },
-  { value: 'CUSTOM', label: '自定义' },
-];
-
+/**
+ * 模型管理列表页（空间内）。
+ *
+ * 列表/启停/删除在本页完成；新建/编辑跳转到独立全页编辑：
+ *   /spaces/:spaceId/models/new
+ *   /spaces/:spaceId/models/:modelNum/edit
+ */
 export default function ModelManagementPage() {
-  const [list, setList] = useState<ModelItem[]>(mockModels);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [editing, setEditing] = useState<ModelItem | null>(null);
-  const [form] = Form.useForm();
+  const navigate = useNavigate();
+  const { spaceId = '' } = useParams();
+  const spaceCode = spaceId;
 
-  function openCreate() {
-    setEditing(null);
-    form.resetFields();
-    form.setFieldsValue({ presetTemperature: 0.7, presetMaxTokens: 4096 });
-    setDrawerOpen(true);
-  }
+  const [list, setList] = useState<ModelVO[]>([]);
+  const [total, setTotal] = useState(0);
+  const [pageNo, setPageNo] = useState(1);
+  const [keyword, setKeyword] = useState('');
+  const [statusFilter, setStatusFilter] = useState<ModelStatus | ''>('');
+  const [loading, setLoading] = useState(false);
 
-  function openEdit(m: ModelItem) {
-    setEditing(m);
-    form.setFieldsValue(m);
-    setDrawerOpen(true);
-  }
-
-  function handleSubmit() {
-    form.validateFields().then((v) => {
-      if (editing) {
-        setList((prev) => prev.map((it) => (it.id === editing.id ? { ...it, ...v } : it)));
-      } else {
-        const m: ModelItem = {
-          id: `mo-${Date.now()}`,
-          num: `MO${Date.now()}001`,
-          status: 'ENABLED',
-          health: 'UNKNOWN',
-          updatedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
-          hasApiKey: true,
-          ...v,
-        };
-        setList((prev) => [m, ...prev]);
+  const load = useCallback(
+    async (nextPage = pageNo, k = keyword, s: ModelStatus | '' = statusFilter) => {
+      if (!spaceCode) return;
+      setLoading(true);
+      try {
+        const result = await pageModels(spaceCode, {
+          keyword: k || undefined,
+          status: s || undefined,
+          pageNo: nextPage,
+          pageSize: PAGE_SIZE,
+        });
+        setList(result.records ?? []);
+        setTotal(result.total ?? 0);
+        setPageNo(result.pageNo ?? nextPage);
+      } catch (err) {
+        notifyError(err, '加载模型列表失败');
+      } finally {
+        setLoading(false);
       }
-      message.success('已保存');
-      setDrawerOpen(false);
-    });
+    },
+    [spaceCode, pageNo, keyword, statusFilter],
+  );
+
+  useEffect(() => {
+    load(1, '', '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spaceCode]);
+
+  async function handleToggle(row: ModelVO) {
+    try {
+      if (row.status === 'ENABLED') {
+        await disableModel(row.num);
+        message.success('已禁用');
+      } else {
+        await enableModel(row.num);
+        message.success('已启用');
+      }
+      await load(pageNo, keyword, statusFilter);
+    } catch (err) {
+      notifyError(err, '操作失败');
+    }
+  }
+
+  async function handleDelete(row: ModelVO) {
+    try {
+      await deleteModel(row.num);
+      message.success('已删除');
+      const newTotal = total - 1;
+      const lastPage = Math.max(1, Math.ceil(newTotal / PAGE_SIZE));
+      await load(Math.min(pageNo, lastPage), keyword, statusFilter);
+    } catch (err) {
+      notifyError(err, '删除失败');
+    }
   }
 
   return (
@@ -74,27 +118,58 @@ export default function ModelManagementPage() {
             模型管理
           </Title>
           <Paragraph type="secondary" style={{ margin: '6px 0 0' }}>
-            空间内 LLM 模型供应商配置、API Key 与参数预设
+            空间内 LLM 模型供应商配置、API Key 与启用/禁用
           </Paragraph>
         </div>
         <Space>
-          <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+          <Input.Search
+            placeholder="搜索模型名称或 Model ID"
+            allowClear
+            onSearch={(v) => {
+              setKeyword(v);
+              load(1, v, statusFilter);
+            }}
+            style={{ width: 240 }}
+          />
+          <Select
+            value={statusFilter || 'ALL'}
+            style={{ width: 120 }}
+            onChange={(v) => {
+              const s = v === 'ALL' ? '' : (v as ModelStatus);
+              setStatusFilter(s);
+              load(1, keyword, s);
+            }}
+            options={[
+              { value: 'ALL', label: '全部状态' },
+              { value: 'DRAFT', label: '草稿' },
+              { value: 'ENABLED', label: '启用' },
+              { value: 'DISABLED', label: '禁用' },
+            ]}
+          />
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('new')}>
             新建模型
           </Button>
         </Space>
       </div>
 
-      <Table
-        rowKey="id"
+      <Table<ModelVO>
+        rowKey="num"
+        loading={loading}
         dataSource={list}
-        pagination={{ pageSize: 10 }}
-        scroll={{ x: 1320 }}
+        pagination={{
+          current: pageNo,
+          total,
+          pageSize: PAGE_SIZE,
+          showSizeChanger: false,
+          onChange: (p) => load(p, keyword, statusFilter),
+        }}
+        scroll={{ x: 1200 }}
         tableLayout="fixed"
         columns={[
           {
             title: '编码',
             dataIndex: 'num',
-            width: 240,
+            width: 220,
             fixed: 'left',
             render: (v: string) => <Text code>{v}</Text>,
           },
@@ -104,93 +179,61 @@ export default function ModelManagementPage() {
             width: 200,
             render: (v: string) => <Text strong>{v}</Text>,
           },
-          {
-            title: '供应商',
-            dataIndex: 'provider',
-            width: 140,
-            render: (p) => <Tag color="purple">{PROVIDERS.find((x) => x.value === p)?.label}</Tag>,
-          },
           { title: 'Model ID', dataIndex: 'modelId', width: 180 },
-          { title: 'Endpoint', dataIndex: 'endpoint', width: 280, render: (v: string) => ellipsisCell(v) },
+          {
+            title: 'Base URL',
+            dataIndex: 'baseUrl',
+            width: 280,
+            render: (v: string) => ellipsisCell(v),
+          },
           {
             title: 'API Key',
-            dataIndex: 'hasApiKey',
-            width: 100,
-            render: (v) => (v ? <Tag color="blue">已配置</Tag> : <Tag>未配置</Tag>),
-          },
-          {
-            title: '预设参数',
-            width: 160,
-            render: (_, r) => `T=${r.presetTemperature} / max=${r.presetMaxTokens}`,
-          },
-          {
-            title: '健康',
-            dataIndex: 'health',
-            width: 90,
-            render: (h: ModelItem['health']) => (
-              <Badge status={HEALTH[h].color as any} text={HEALTH[h].label} />
-            ),
+            dataIndex: 'apiKey',
+            width: 140,
+            render: (v: string) =>
+              v ? <Tag color="blue">{v}</Tag> : <Tag>未配置</Tag>,
           },
           {
             title: '状态',
             dataIndex: 'status',
             width: 90,
-            render: (s: ModelStatus) => <Tag color={STATUS[s].color}>{STATUS[s].label}</Tag>,
+            render: (s: ModelStatus) => (
+              <Tag color={STATUS_OPTIONS[s].color}>{STATUS_OPTIONS[s].label}</Tag>
+            ),
+          },
+          {
+            title: '更新时间',
+            dataIndex: 'updateTime',
+            width: 160,
           },
           {
             title: '操作',
-            width: 160,
+            width: 220,
             fixed: 'right',
-            render: (_, r) => (
+            render: (_: unknown, r: ModelVO) => (
               <Space>
-                <a onClick={() => openEdit(r)}>编辑</a>
-                <a>测试连通性</a>
+                <a onClick={() => navigate(`${r.num}/edit`)}>编辑</a>
+                <a onClick={() => handleToggle(r)}>
+                  {r.status === 'ENABLED' ? '禁用' : '启用'}
+                </a>
+                {r.status === 'DRAFT' && (
+                  <Popconfirm
+                    title="确认删除该模型？"
+                    okText="删除"
+                    okButtonProps={{ danger: true }}
+                    cancelText="取消"
+                    onConfirm={() => handleDelete(r)}
+                  >
+                    <a style={{ color: '#ff4d4f' }}>
+                      <DeleteOutlined /> 删除
+                    </a>
+                  </Popconfirm>
+                )}
               </Space>
             ),
           },
         ]}
       />
-
-      <Drawer
-        title={editing ? `编辑模型 - ${editing.name}` : '新建模型'}
-        width={520}
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        extra={
-          <Space>
-            <Button onClick={() => setDrawerOpen(false)}>取消</Button>
-            <Button type="primary" onClick={handleSubmit}>
-              保存
-            </Button>
-          </Space>
-        }
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item name="name" label="模型名称" rules={[{ required: true }]}>
-            <Input maxLength={50} placeholder="例如：OpenAI GPT-4o" />
-          </Form.Item>
-          <Form.Item name="provider" label="供应商" rules={[{ required: true }]}>
-            <Select options={PROVIDERS} />
-          </Form.Item>
-          <Form.Item name="modelId" label="Model ID" rules={[{ required: true }]}>
-            <Input placeholder="例如：gpt-4o" />
-          </Form.Item>
-          <Form.Item name="endpoint" label="Endpoint">
-            <Input placeholder="https://api.openai.com/v1" />
-          </Form.Item>
-          <Form.Item label="API Key">
-            <Input.Password placeholder={editing?.hasApiKey ? '****（已配置）' : '请输入'} />
-          </Form.Item>
-          <Space>
-            <Form.Item name="presetTemperature" label="Temperature">
-              <InputNumber min={0} max={2} step={0.1} />
-            </Form.Item>
-            <Form.Item name="presetMaxTokens" label="Max Tokens">
-              <InputNumber min={256} max={32768} step={256} />
-            </Form.Item>
-          </Space>
-        </Form>
-      </Drawer>
     </div>
   );
 }

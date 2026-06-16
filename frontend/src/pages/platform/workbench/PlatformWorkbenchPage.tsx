@@ -13,9 +13,11 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { Avatar, Badge, Button, Card, Col, Empty, List, Row, Space, Statistic, Tag, Timeline, Tooltip, Typography } from 'antd';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
-import { mockSpaces } from '@/mock/spaces';
+import { pageMine, type SpaceCardVO } from '@/api/space';
+import { notifyError } from '@/utils/request';
 import { mockAgents } from '@/mock/agents';
 import { mockSandboxes } from '@/mock/sandboxes';
 import { mockModels } from '@/mock/models';
@@ -33,8 +35,15 @@ export default function PlatformWorkbenchPage() {
   const navigate = useNavigate();
   const currentUser = useAuthStore((s) => s.currentUser);
 
-  const spaceCount = mockSpaces.length;
-  const adminSpaceCount = mockSpaces.filter((s) => s.myRole === 'ADMIN').length;
+  const [spaces, setSpaces] = useState<SpaceCardVO[]>([]);
+  useEffect(() => {
+    pageMine(undefined, 1, 50)
+      .then((res) => setSpaces(res.records ?? []))
+      .catch((err) => notifyError(err, '加载空间列表失败'));
+  }, []);
+
+  const spaceCount = spaces.length;
+  const adminSpaceCount = spaces.filter((s) => s.currentUserRole === 'ADMIN').length;
   const onlineAgents = mockAgents.filter((a) => a.status === 'ONLINE').length;
   const onlineSandboxes = mockSandboxes.filter((s) => s.status === 'ONLINE').length;
   const offlineSandboxes = mockSandboxes.filter((s) => s.status === 'OFFLINE').length;
@@ -113,16 +122,16 @@ export default function PlatformWorkbenchPage() {
             title="我参与的空间"
             extra={<a onClick={() => navigate('/platform/spaces')}>查看全部 <ArrowRightOutlined /></a>}
           >
-            {mockSpaces.length === 0 ? (
+            {spaces.length === 0 ? (
               <Empty description="还没有空间，去创建一个" />
             ) : (
               <List
-                dataSource={mockSpaces}
+                dataSource={spaces}
                 renderItem={(s) => (
                   <List.Item
                     className="workbench-space-row"
                     actions={[
-                      <Button key="enter" type="link" onClick={() => navigate(`/spaces/${s.id}/agents`)}>
+                      <Button key="enter" type="link" onClick={() => navigate(`/spaces/${s.num}/agents`)}>
                         进入 <ArrowRightOutlined />
                       </Button>,
                     ]}
@@ -136,8 +145,8 @@ export default function PlatformWorkbenchPage() {
                       title={
                         <Space>
                           <Text strong>{s.name}</Text>
-                          <Tag color={s.myRole === 'ADMIN' ? 'blue' : 'green'} bordered={false}>
-                            {s.myRole === 'ADMIN' ? '管理' : '成员'}
+                          <Tag color={s.currentUserRole === 'ADMIN' ? 'blue' : 'green'} bordered={false}>
+                            {s.currentUserRole === 'ADMIN' ? '管理' : '成员'}
                           </Tag>
                         </Space>
                       }
@@ -145,10 +154,10 @@ export default function PlatformWorkbenchPage() {
                         <Space split="·" wrap>
                           <Text type="secondary" style={{ fontSize: 12 }}>{s.num}</Text>
                           <Text type="secondary" style={{ fontSize: 12 }}>
-                            <UserOutlined /> {s.createdBy}
+                            <UserOutlined /> {s.ownerUserCode}
                           </Text>
                           <Text type="secondary" style={{ fontSize: 12 }}>
-                            {s.admins.length} 管理 / {s.members.length} 成员
+                            {s.adminCount} 管理 / {s.memberCount} 成员
                           </Text>
                         </Space>
                       }
@@ -256,9 +265,9 @@ export default function PlatformWorkbenchPage() {
               <ShortcutTile
                 icon={<RobotOutlined />}
                 label="进入第一个空间"
-                hint={mockSpaces[0]?.name}
-                onClick={() => navigate(`/spaces/${mockSpaces[0]?.id}/agents`)}
-                disabled={mockSpaces.length === 0}
+                hint={spaces[0]?.name}
+                onClick={() => navigate(`/spaces/${spaces[0]?.num}/agents`)}
+                disabled={spaces.length === 0}
               />
               <ShortcutTile
                 icon={<UserOutlined />}
