@@ -1,5 +1,6 @@
 import { CrownOutlined, UserOutlined } from '@ant-design/icons';
 import {
+  Button,
   Form,
   Input,
   Select,
@@ -210,22 +211,12 @@ export default function SpaceEditPage() {
           )}
         </div>
         <Space>
-          <button
-            type="button"
-            className="ant-btn ant-btn-default"
-            onClick={() => navigate(listPath)}
-            disabled={submitting}
-          >
-            <span>取消</span>
-          </button>
-          <button
-            type="button"
-            className="ant-btn ant-btn-primary"
-            onClick={handleSubmit}
-            disabled={submitting}
-          >
-            <span>{submitting ? '保存中…' : isEdit ? '保存' : '确定创建'}</span>
-          </button>
+          <Button onClick={() => navigate(listPath)} disabled={submitting}>
+            取消
+          </Button>
+          <Button type="primary" onClick={handleSubmit} loading={submitting}>
+            {isEdit ? '保存' : '确定创建'}
+          </Button>
         </Space>
       </div>
 

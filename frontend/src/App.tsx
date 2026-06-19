@@ -18,6 +18,7 @@ import PromptManagementPage from '@/pages/spaces/prompts/PromptManagementPage';
 import PromptDetailPage from '@/pages/spaces/prompts/PromptDetailPage';
 import PromptEditPage from '@/pages/spaces/prompts/PromptEditPage';
 import SkillManagementPage from '@/pages/spaces/skills/SkillManagementPage';
+import SkillDetailPage from '@/pages/spaces/skills/SkillDetailPage';
 import SkillEditPage from '@/pages/spaces/skills/SkillEditPage';
 import ToolManagementPage from '@/pages/spaces/tools/ToolManagementPage';
 import ToolEditPage from '@/pages/spaces/tools/ToolEditPage';
@@ -81,6 +82,7 @@ export default function App() {
 
           <Route path="skills" element={<SkillManagementPage />} />
           <Route path="skills/new" element={<SkillEditPage />} />
+          <Route path="skills/:skillId" element={<SkillDetailPage />} />
           <Route path="skills/:skillId/edit" element={<SkillEditPage />} />
 
           <Route path="tools" element={<ToolManagementPage />} />

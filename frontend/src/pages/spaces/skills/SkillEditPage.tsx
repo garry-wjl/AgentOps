@@ -32,6 +32,7 @@ import {
   getSkill,
   listResourceFiles,
   listSkillVersions,
+  publishSkillVersion,
   renameResource,
   updateResourceContent,
   updateSkillBasic,
@@ -40,8 +41,10 @@ import {
   type SkillResourceFileDTO,
   type SkillVersionDTO,
 } from '@/api/skill';
+import { getSpace } from '@/api/space';
 import { notifyError } from '@/utils/request';
 import PageBreadcrumb from '@/components/PageBreadcrumb';
+import { hasAdminRole, useAuthStore } from '@/stores/authStore';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -88,7 +91,14 @@ export default function SkillEditPage() {
 
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [form] = Form.useForm<SkillFormValues>();
+
+  const currentUser = useAuthStore((s) => s.currentUser);
+  const [adminCodes, setAdminCodes] = useState<string[]>([]);
+  const [ownerCode, setOwnerCode] = useState('');
+  const isSpaceAdmin = adminCodes.includes(currentUser?.num ?? '') || ownerCode === currentUser?.num;
+  const isAdmin = hasAdminRole(currentUser) || isSpaceAdmin;
 
   // 资源编辑 Modal
   const [resourceModalOpen, setResourceModalOpen] = useState(false);
@@ -104,8 +114,10 @@ export default function SkillEditPage() {
     setLoading(true);
     (async () => {
       try {
-        const detail = await getSkill(skillId);
+        const [detail, sp] = await Promise.all([getSkill(skillId), getSpace(spaceId)]);
         setEditing(detail);
+        setAdminCodes(sp.adminUserCodes ?? []);
+        setOwnerCode(sp.ownerUserCode ?? '');
         form.setFieldsValue({
           name: detail.name,
           description: detail.description ?? '',
@@ -211,6 +223,39 @@ export default function SkillEditPage() {
       notifyError(err, isEdit ? '保存失败' : '创建失败');
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  // ----- 保存并发布 -----
+  async function handleSaveAndPublish() {
+    let values: SkillFormValues;
+    try {
+      values = await form.validateFields();
+    } catch {
+      return;
+    }
+    setPublishing(true);
+    try {
+      if (isEdit && editing) {
+        await updateSkillBasic(editing.num, {
+          description: values.description,
+          tags: values.tags,
+          remark: values.remark,
+        });
+        const vers = await listSkillVersions(editing.num);
+        const draft = vers.find((v) => v.status === 'DRAFT');
+        if (!draft) {
+          message.warning('未找到可发布的草稿版本');
+          return;
+        }
+        await publishSkillVersion(draft.num);
+        message.success('已保存并发布');
+        navigate(`/spaces/${spaceId}/skills/${skillId}`);
+      }
+    } catch (err) {
+      notifyError(err, '草稿已保存但发布失败');
+    } finally {
+      setPublishing(false);
     }
   }
 
@@ -326,12 +371,17 @@ export default function SkillEditPage() {
           )}
         </div>
         <Space>
-          <Button onClick={() => navigate(listPath)} disabled={submitting}>
+          <Button onClick={() => navigate(listPath)} disabled={submitting || publishing}>
             取消
           </Button>
-          <Button type="primary" onClick={handleSave} loading={submitting}>
+          <Button onClick={handleSave} loading={submitting} disabled={publishing}>
             保存
           </Button>
+          {isEdit && draftVersion && isAdmin && (
+            <Button type="primary" onClick={handleSaveAndPublish} loading={publishing} disabled={submitting}>
+              保存并发布
+            </Button>
+          )}
         </Space>
       </div>
 

@@ -167,13 +167,13 @@ export default function SkillManagementPage() {
             dataIndex: 'num',
             width: 220,
             fixed: 'left',
-            render: (v: string) => <Text code>{v}</Text>,
+            render: (v: string, r: SkillVO) => <a onClick={() => navigate(r.num)}><Text code>{v}</Text></a>,
           },
           {
             title: '名称',
             dataIndex: 'name',
             width: 200,
-            render: (v: string) => <Text strong>{v}</Text>,
+            render: (v: string, r: SkillVO) => <a onClick={() => navigate(r.num)}><Text strong>{v}</Text></a>,
           },
           {
             title: '描述',
@@ -213,6 +213,7 @@ export default function SkillManagementPage() {
             fixed: 'right',
             render: (_: unknown, r: SkillVO) => (
               <Space>
+                <a onClick={() => navigate(r.num)}>详情</a>
                 <a onClick={() => navigate(`${r.num}/edit`)}>编辑</a>
                 {r.status === 'DRAFT' && <a onClick={() => handleStatusAction(r, 'enable')}>启用</a>}
                 {r.status === 'EFFECTIVE' && (
