@@ -19,5 +19,5 @@ public class AssignUserRolesParamDTO {
     /**
      * 操作人标识。
      */
-    public Long operatorId;
+    public String operatorCode;
 }

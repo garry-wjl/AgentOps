@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * 在适配层与应用层之间传递的请求上下文。
+ * 在适配层与应用层之间传递的请求上下文。所有跨领域引用均使用业务编码（String）。
  */
 @AllArgsConstructor
 @NoArgsConstructor
@@ -16,9 +16,9 @@ import lombok.Setter;
 @Setter
 public class RequestContextDTO {
     /**
-     * 当前认证用户的操作人标识。
+     * 当前认证用户的业务编码（user.num）。
      */
-    private Long operatorId;
+    private String currentUserCode;
 
     /**
      * 用于请求诊断的链路追踪标识。
@@ -33,5 +33,5 @@ public class RequestContextDTO {
     /**
      * 预留给空间级操作的空间业务编码。
      */
-    private String spaceNum;
+    private String spaceCode;
 }

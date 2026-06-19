@@ -14,24 +14,24 @@ import java.time.LocalDateTime;
 @Setter
 public abstract class DomainEntity {
     /**
-     * 数据库自增主键。
+     * 数据库自增主键。仅供持久化层使用，不得作为跨领域引用。
      */
     protected Long id;
 
     /**
-     * 跨层传递和外部展示使用的业务编码。
+     * 跨层传递和外部展示使用的业务编码，所有跨领域引用均以业务编码（String）为准。
      */
     protected String num;
 
     /**
-     * 创建该实体的操作人标识。
+     * 创建该实体的操作人业务编码。
      */
-    protected Long createNo;
+    protected String createNo;
 
     /**
-     * 最后更新该实体的操作人标识。
+     * 最后更新该实体的操作人业务编码。
      */
-    protected Long updateNo;
+    protected String updateNo;
 
     /**
      * 实体创建时间。
@@ -46,23 +46,23 @@ public abstract class DomainEntity {
     /**
      * 在持久化前初始化或刷新审计字段。
      *
-     * @param operatorId 当前操作人标识
+     * @param operatorCode 当前操作人业务编码
      */
-    public void initialize(Long operatorId) {
-        Assert.notNull(operatorId, "operatorId must not be null");
+    public void initialize(String operatorCode) {
+        Assert.notBlank(operatorCode, "operatorCode must not be blank");
         LocalDateTime now = LocalDateTimeUtil.now();
         this.createTime = this.createTime == null ? now : this.createTime;
-        this.createNo = this.createNo == null ? operatorId : this.createNo;
+        this.createNo = this.createNo == null ? operatorCode : this.createNo;
         this.updateTime = now;
-        this.updateNo = operatorId;
+        this.updateNo = operatorCode;
     }
 
     /**
      * 校验通用审计字段，并委托子类校验业务不变式。
      */
     public void validate() {
-        Assert.notNull(this.createNo, "createNo must not be null");
-        Assert.notNull(this.updateNo, "updateNo must not be null");
+        Assert.notBlank(this.createNo, "createNo must not be blank");
+        Assert.notBlank(this.updateNo, "updateNo must not be blank");
         Assert.notNull(this.createTime, "createTime must not be null");
         Assert.notNull(this.updateTime, "updateTime must not be null");
         domainValidate();
@@ -76,16 +76,16 @@ public abstract class DomainEntity {
     /**
      * 持久化当前领域实体状态。
      *
-     * @param operatorId 当前操作人标识
+     * @param operatorCode 当前操作人业务编码
      */
-    public abstract void save(Long operatorId);
+    public abstract void save(String operatorCode);
 
     /**
      * 删除或标记删除当前领域实体。
      *
-     * @param operatorId 当前操作人标识
+     * @param operatorCode 当前操作人业务编码
      */
-    public abstract void delete(Long operatorId);
+    public abstract void delete(String operatorCode);
 
     /**
      * 返回id。
@@ -110,7 +110,7 @@ public abstract class DomainEntity {
      *
      * @return createNo
      */
-    public Long getCreateNo() {
+    public String getCreateNo() {
         return createNo;
     }
 
@@ -119,7 +119,7 @@ public abstract class DomainEntity {
      *
      * @return updateNo
      */
-    public Long getUpdateNo() {
+    public String getUpdateNo() {
         return updateNo;
     }
 
@@ -164,7 +164,7 @@ public abstract class DomainEntity {
      *
      * @param createNo createNo
      */
-    public void setCreateNo(Long createNo) {
+    public void setCreateNo(String createNo) {
         this.createNo = createNo;
     }
 
@@ -173,7 +173,7 @@ public abstract class DomainEntity {
      *
      * @param updateNo updateNo
      */
-    public void setUpdateNo(Long updateNo) {
+    public void setUpdateNo(String updateNo) {
         this.updateNo = updateNo;
     }
 

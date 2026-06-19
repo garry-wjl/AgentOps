@@ -3,6 +3,10 @@ node_modules/
 frontend/dist/
 frontend/.vite/
 *.tsbuildinfo
+# tsc 误编译产物（src 下应只有 .ts/.tsx 源文件）
+frontend/src/**/*.js
+frontend/src/**/*.js.map
+frontend/src/**/*.d.ts
 
 # Java
 server/**/target/
@@ -31,3 +35,7 @@ Thumbs.db
 # Build
 logs/
 *.log.gz
+# Reference screenshots placed by the user, not source assets
+/image.png
+/image*.png
+/screenshot*.png

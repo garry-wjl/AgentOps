@@ -87,6 +87,23 @@ public class UserQueryService {
     }
 
     /**
+     * 批量根据用户业务编码查询用户信息（自动过滤已删除）。
+     *
+     * @param userCodes 用户业务编码列表
+     * @return 用户传输对象列表，按入参顺序无保证；空入参返回空列表
+     */
+    public List<UserDTO> listByCodes(List<String> userCodes) {
+        if (CollUtil.isEmpty(userCodes)) {
+            return Collections.emptyList();
+        }
+        LambdaQueryWrapper<UserEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(UserEntity::getNum, userCodes)
+                .eq(UserEntity::getIsDeleted, InfraConstant.NOT_DELETED);
+        List<UserEntity> entities = userMapper.selectList(wrapper);
+        return toUserDTOs(entities);
+    }
+
+    /**
      * 根据用户业务编码查询密码哈希。
      *
      * @param userNum 用户业务编码

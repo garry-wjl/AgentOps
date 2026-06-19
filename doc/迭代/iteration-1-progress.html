@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Iteration 1 进度看板 — 平台优化</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; color: #333; padding: 24px; }
+  .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 24px 32px; border-radius: 12px; margin-bottom: 24px; }
+  .header h1 { font-size: 24px; margin-bottom: 4px; }
+  .header p { opacity: 0.85; font-size: 14px; }
+  .pipeline { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0; position: relative; padding: 20px 0; }
+  .node { display: flex; flex-direction: column; align-items: center; width: 140px; position: relative; }
+  .node-box { width: 120px; padding: 12px 8px; border-radius: 8px; text-align: center; font-size: 13px; font-weight: 600; border: 2px solid #d0d5dd; background: #fff; transition: all 0.3s; cursor: default; }
+  .node-box.pending { border-color: #d0d5dd; color: #98a2b3; background: #f9fafb; }
+  .node-box.in_progress { border-color: #fbbf24; color: #92400e; background: #fef3c7; box-shadow: 0 0 12px rgba(251,191,36,0.3); }
+  .node-box.completed { border-color: #34d399; color: #065f46; background: #d1fae5; }
+  .node-box.blocked { border-color: #f87171; color: #991b1b; background: #fee2e2; }
+  .node-label { font-size: 11px; color: #667085; margin-top: 4px; text-align: center; max-width: 120px; }
+  .node-time { font-size: 10px; color: #98a2b3; margin-top: 2px; }
+  .arrow { width: 24px; height: 32px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #98a2b3; font-size: 18px; }
+  .branch-wrap { display: flex; align-items: flex-start; }
+  .branch { display: flex; flex-direction: column; align-items: center; gap: 0; }
+  .branch .arrow-vertical { height: 16px; width: 2px; background: #d0d5dd; }
+  .branch-row { display: flex; align-items: flex-start; gap: 0; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🚀 Iteration 1: 平台优化</h1>
+  <p>范围：① 编辑空间按钮样式修复 ② Skill管理版本能力</p>
+</div>
+
+<div class="pipeline" id="pipeline">
+  <!-- row 1 -->
+  <div class="node" data-task="prd">
+    <div class="node-box pending" id="node-prd">撰写 PRD</div>
+    <div class="node-label">产品经理</div>
+    <div class="node-time" id="time-prd">-</div>
+  </div>
+  <div class="arrow">→</div>
+  <div class="node" data-task="review-prd">
+    <div class="node-box pending" id="node-review-prd">评审 PRD</div>
+    <div class="node-label">全员</div>
+    <div class="node-time" id="time-review-prd">-</div>
+  </div>
+  <div class="arrow">→</div>
+  <div class="node" data-task="confirm-prd">
+    <div class="node-box pending" id="node-confirm-prd">👤 人工确认</div>
+    <div class="node-label">PRD (用户)</div>
+    <div class="node-time" id="time-confirm-prd">-</div>
+  </div>
+  <div class="arrow">→</div>
+  <div class="node" data-task="tech">
+    <div class="node-box pending" id="node-tech">设计技术方案</div>
+    <div class="node-label">技术负责人</div>
+    <div class="node-time" id="time-tech">-</div>
+  </div>
+  <div class="arrow">→</div>
+  <div class="node" data-task="review-tech">
+    <div class="node-box pending" id="node-review-tech">评审技术方案</div>
+    <div class="node-label">全员</div>
+    <div class="node-time" id="time-review-tech">-</div>
+  </div>
+  <div class="arrow">→</div>
+  <div class="node" data-task="confirm-tech">
+    <div class="node-box pending" id="node-confirm-tech">👤 人工确认</div>
+    <div class="node-label">技术方案 (用户)</div>
+    <div class="node-time" id="time-confirm-tech">-</div>
+  </div>
+  <div class="arrow">→</div>
+  <div class="node" data-task="testcase">
+    <div class="node-box pending" id="node-testcase">设计测试用例</div>
+    <div class="node-label">测试工程师</div>
+    <div class="node-time" id="time-testcase">-</div>
+  </div>
+  <div class="arrow">→</div>
+  <div class="node" data-task="review-testcase">
+    <div class="node-box pending" id="node-review-testcase">评审测试用例</div>
+    <div class="node-label">全员</div>
+    <div class="node-time" id="time-review-testcase">-</div>
+  </div>
+  <div class="arrow">→</div>
+  <div class="node" data-task="confirm-testcase">
+    <div class="node-box pending" id="node-confirm-testcase">👤 人工确认</div>
+    <div class="node-label">测试用例 (用户)</div>
+    <div class="node-time" id="time-confirm-testcase">-</div>
+  </div>
+</div>
+
+<div class="pipeline" style="padding-top:0">
+  <div style="display:flex; align-items:flex-start; gap:0; flex-wrap:wrap;">
+    <div class="node" data-task="backend">
+      <div class="node-box pending" id="node-backend">后端开发</div>
+      <div class="node-label">后端开发师</div>
+      <div class="node-time" id="time-backend">-</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="node" data-task="review-backend">
+      <div class="node-box pending" id="node-review-backend">评审后端代码</div>
+      <div class="node-label">全员</div>
+      <div class="node-time" id="time-review-backend">-</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="node" data-task="confirm-backend">
+      <div class="node-box pending" id="node-confirm-backend">👤 人工确认</div>
+      <div class="node-label">后端代码 (用户)</div>
+      <div class="node-time" id="time-confirm-backend">-</div>
+    </div>
+  </div>
+  <div style="display:flex; align-items:flex-start; gap:0; flex-wrap:wrap; margin-top:12px;">
+    <div class="node" data-task="frontend">
+      <div class="node-box pending" id="node-frontend">前端开发</div>
+      <div class="node-label">前端开发师</div>
+      <div class="node-time" id="time-frontend">-</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="node" data-task="review-frontend">
+      <div class="node-box pending" id="node-review-frontend">评审前端代码</div>
+      <div class="node-label">全员</div>
+      <div class="node-time" id="time-review-frontend">-</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="node" data-task="confirm-frontend">
+      <div class="node-box pending" id="node-confirm-frontend">👤 人工确认</div>
+      <div class="node-label">前端代码 (用户)</div>
+      <div class="node-time" id="time-confirm-frontend">-</div>
+    </div>
+  </div>
+  <div style="display:flex; align-items:flex-start; gap:0; flex-wrap:wrap; margin-top:12px;">
+    <div class="node" data-task="verify">
+      <div class="node-box pending" id="node-verify">审查与验证</div>
+      <div class="node-label">架构守卫 + 测试工程师</div>
+      <div class="node-time" id="time-verify">-</div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:24px; padding:16px; background:#fff; border-radius:8px; border:1px solid #e5e7eb;">
+  <h3 style="font-size:14px; margin-bottom:8px;">当前状态</h3>
+  <div id="status-text" style="font-size:13px; color:#667085;">待启动</div>
+</div>
+
+<script>
+function updateNode(taskId, status, time) {
+  const el = document.getElementById('node-' + taskId);
+  if (!el) return;
+  el.className = 'node-box ' + status;
+  const timeEl = document.getElementById('time-' + taskId);
+  if (timeEl && time) timeEl.textContent = time;
+}
+function updateStatus(text) {
+  document.getElementById('status-text').textContent = text;
+}
+// Code review complete, awaiting user confirmation
+updateNode('prd', 'completed', '2026-06-19 11:00');
+updateNode('review-prd', 'completed', '2026-06-19 11:20');
+updateNode('confirm-prd', 'completed', '2026-06-19 11:40');
+updateNode('tech', 'completed', '2026-06-19 12:00');
+updateNode('review-tech', 'completed', '2026-06-19 12:20');
+updateNode('confirm-tech', 'completed', '2026-06-19 12:40');
+updateNode('testcase', 'completed', '2026-06-19 13:00');
+updateNode('review-testcase', 'completed', '2026-06-19 13:20');
+updateNode('confirm-testcase', 'completed', '2026-06-19 13:40');
+updateNode('backend', 'completed', '2026-06-19 13:50');
+updateNode('frontend', 'completed', '2026-06-19 14:00');
+updateNode('review-backend', 'completed', '2026-06-19 14:10');
+updateNode('review-frontend', 'completed', '2026-06-19 14:30');
+updateNode('confirm-backend', 'completed', '2026-06-19 14:50');
+updateNode('confirm-frontend', 'completed', '2026-06-19 14:50');
+updateNode('verify', 'completed', '2026-06-19 15:10');
+updateStatus('🎉 Iteration 1 全部完成！43 条测试用例全部通过 ✅');
+</script>
+</body>
+</html>

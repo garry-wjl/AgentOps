@@ -84,9 +84,9 @@ public interface UserGateway {
     /**
      * 校验操作人是否具备管理员角色。
      *
-     * @param operatorId 操作人标识
+     * @param operatorCode 操作人标识
      */
-    void assertAdmin(Long operatorId);
+    void assertAdmin(String operatorCode);
 
     /**
      * 根据平台角色解析可访问菜单。

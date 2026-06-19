@@ -215,12 +215,12 @@ body {
 .user-profile-trigger {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  min-width: 132px;
-  height: 40px;
-  padding: 4px 10px 4px 6px;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: 50%;
   background: transparent;
   cursor: pointer;
   transition: background 0.18s ease, border-color 0.18s ease;
@@ -234,13 +234,6 @@ body {
 .user-profile-avatar {
   background: linear-gradient(135deg, #1664ff 0%, #00a3ff 100%);
   box-shadow: 0 4px 12px rgba(22, 100, 255, 0.24);
-}
-
-.user-profile-trigger-text {
-  display: grid;
-  gap: 2px;
-  text-align: left;
-  line-height: 1.1;
 }
 
 .user-profile-name {
@@ -370,4 +363,587 @@ body {
   border-radius: 8px;
   padding: 24px;
   text-align: center;
+}
+
+/* ===================== 全局两层 Shell ===================== */
+
+.shell-layout {
+  min-height: 100vh;
+  background: #f4f6fa;
+}
+.shell-body {
+  background: transparent;
+}
+.shell-sider {
+  background: #ffffff !important;
+  border-right: 1px solid #f0f0f0;
+}
+.shell-menu {
+  border-right: 0 !important;
+  padding-top: 12px;
+}
+.shell-menu .ant-menu-item-group-title {
+  font-size: 12px;
+  color: #8c8c8c;
+  letter-spacing: 0.4px;
+  padding: 12px 16px 4px;
+}
+.shell-content {
+  padding: 24px;
+  background: #f4f6fa;
+}
+
+/* 顶部品牌条 */
+.brand-header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 56px;
+  padding: 0 20px;
+  background: #ffffff;
+  border-bottom: 1px solid #ebedf0;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.brand-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.brand-logo {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #1677ff, #69b1ff);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.4px;
+}
+.brand-text {
+  font-weight: 600;
+  font-size: 15px;
+  color: #1f2329;
+}
+.brand-header-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+.brand-header-divider {
+  width: 1px;
+  height: 20px;
+  background: #e5e7eb;
+  margin: 0 12px;
+}
+.brand-header-leading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* 顶部条上的「文字 + 图标」链接按钮（如首页 / 空间切换） */
+.header-link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 0;
+  background: transparent;
+  border-radius: 6px;
+  color: #1f2329;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  line-height: 1;
+}
+.header-link-button:hover {
+  background: #f0f4ff;
+  color: #1677ff;
+}
+.header-link-button--space {
+  font-weight: 600;
+}
+.header-link-button-arrow {
+  font-size: 11px;
+  color: #8c8c8c;
+  margin-left: 2px;
+}
+.header-breadcrumb-sep {
+  color: #c7ccd4;
+  font-size: 14px;
+  user-select: none;
+  padding: 0 2px;
+}
+.brand-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto; /* 没有 center 占位时也保证贴最右 */
+}
+
+/* 顶部空间下拉触发器 */
+/* 顶部空间下拉触发器（旧椭圆样式，保留以防其他位置复用，新空间下拉按钮已改用 .header-link-button--space） */
+.space-switch-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+  border-radius: 999px;
+  cursor: pointer;
+  color: #1f2329;
+  font-size: 13px;
+}
+.space-switch-trigger:hover {
+  background: #eef4ff;
+  border-color: #91caff;
+}
+.space-switch-num {
+  font-size: 11px !important;
+}
+.space-switch-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 220px;
+}
+
+/* 用户菜单 —— 顶部右侧仅显示头像图标（贴右由 .brand-header-right 容器负责） */
+.user-profile-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+}
+.user-profile-trigger:hover {
+  background: #f0f4ff;
+}
+.user-profile-name {
+  font-size: 13px;
+  color: #1f2329;
+}
+.user-profile-action {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #1f2329;
+}
+.user-profile-action:hover {
+  background: #f6f8fb;
+  color: #1664ff;
+}
+.user-profile-logout {
+  color: #ff4d4f;
+}
+
+/* ===================== 通用 page-section ===================== */
+.page-breadcrumb {
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #4e5969;
+}
+.page-breadcrumb a {
+  color: #4e5969;
+}
+.page-breadcrumb a:hover {
+  color: #1677ff;
+}
+.page-breadcrumb .anticon {
+  margin-right: 4px;
+}
+
+.page-section {
+  background: #ffffff;
+  padding: 20px 24px;
+  border-radius: 12px;
+  border: 1px solid #ebedf0;
+}
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.form-hint {
+  margin-top: 4px;
+  color: #8c8c8c;
+  font-size: 12px;
+}
+.form-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.modal-warning-icon {
+  color: #faad14;
+  margin-right: 6px;
+}
+
+/* ===================== 空间卡片列表 ===================== */
+.space-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.space-card {
+  border-radius: 12px !important;
+  transition: box-shadow 0.2s;
+}
+/* 收紧 ant Card body padding，避免卡片过高 */
+.space-card .ant-card-body {
+  padding: 16px;
+}
+.space-card-create {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 168px;
+  border: 2px dashed #c4cdd9;
+  border-radius: 12px;
+  background: #fafbfd;
+  color: #4e5969;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  gap: 6px;
+}
+.space-card-create:hover {
+  border-color: #1677ff;
+  color: #1677ff;
+  background: #eef4ff;
+}
+.space-card-create .anticon {
+  font-size: 24px;
+}
+.space-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.space-card-clickable {
+  cursor: pointer;
+}
+/* 卡片右上角的横向三点按钮：始终可见 */
+.space-card-more {
+  margin-left: auto;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #4e5969;
+  transition: background 0.18s ease;
+}
+.space-card-more:hover {
+  background: #f0f4ff;
+  color: #1677ff;
+}
+.space-card-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #ffe6a3, #ffd591);
+  color: #ad6800;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.space-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.space-card-title .ant-typography {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.space-card-num {
+  font-size: 12px !important;
+  margin-bottom: 6px !important;
+}
+.space-card-meta {
+  display: flex;
+  gap: 16px;
+  color: #4e5969;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+.space-card-remark {
+  margin-bottom: 0 !important;
+  font-size: 12px;
+}
+.space-card-avatars {
+  display: flex;
+  align-items: center;
+  gap: -4px;
+  margin-bottom: 12px;
+}
+.space-card-avatars .ant-avatar:not(:first-child) {
+  margin-left: -8px;
+  border: 2px solid #fff;
+}
+.space-card-avatars-more {
+  background: #f0f0f0 !important;
+  color: #4e5969 !important;
+  font-size: 12px;
+}
+.space-card-footer {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ===================== 系统设置 ===================== */
+.settings-tabs .ant-tabs-tab {
+  padding: 12px 16px !important;
+}
+.logo-uploader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.logo-preview {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1677ff, #69b1ff);
+  color: #fff;
+  font-size: 26px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===================== 工作台 ===================== */
+.dashboard-stat-card {
+  border-radius: 10px;
+}
+
+/* ===================== Prompt 编辑器 ===================== */
+.prompt-editor {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 24px;
+  height: calc(100vh - 240px);
+}
+.prompt-editor-meta {
+  border-right: 1px solid #f0f0f0;
+  padding-right: 16px;
+  overflow-y: auto;
+}
+.prompt-editor-main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  min-height: 0;
+}
+.prompt-editor-pane {
+  display: flex;
+  flex-direction: column;
+  background: #fafbfd;
+  border: 1px solid #ebedf0;
+  border-radius: 8px;
+  padding: 12px;
+  overflow: hidden;
+}
+.prompt-editor-pane .pane-title {
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #1f2329;
+}
+.prompt-editor-pane textarea {
+  flex: 1;
+  font-family: 'SFMono-Regular', Menlo, Consolas, monospace !important;
+  background: #ffffff !important;
+}
+.markdown-preview {
+  flex: 1;
+  overflow: auto;
+  white-space: pre-wrap;
+  background: #ffffff;
+  padding: 12px;
+  border: 1px solid #f0f0f0;
+  border-radius: 6px;
+  margin: 0;
+  font-family: 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.var-token {
+  background: #fffbe6;
+  color: #ad6800;
+  padding: 0 4px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+/* ===================== 平台工作台 ===================== */
+.workbench-page {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+.workbench-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 24px 28px;
+  margin-bottom: 16px;
+  border-radius: 14px;
+  background: linear-gradient(120deg, #eef4ff 0%, #f7f9ff 60%, #ffffff 100%);
+  border: 1px solid #e0eaff;
+}
+.workbench-stats .ant-card .ant-card-body {
+  padding: 16px;
+}
+.workbench-card {
+  border-radius: 12px;
+}
+.workbench-card .ant-card-head {
+  border-bottom: 1px solid #f0f0f0;
+}
+.workbench-space-row {
+  border-radius: 8px;
+  padding: 10px 12px !important;
+  transition: background 0.18s;
+}
+.workbench-space-row:hover {
+  background: #f6f8fb;
+}
+.workbench-space-avatar {
+  background: linear-gradient(135deg, #1664ff, #00a3ff) !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+.workbench-health-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fafbfd;
+}
+
+/* 快捷入口磁贴 */
+.workbench-shortcuts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.workbench-shortcut-tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid #ebedf0;
+  background: #ffffff;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.18s;
+}
+.workbench-shortcut-tile:hover {
+  border-color: #91caff;
+  background: #f0f7ff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(22, 100, 255, 0.08);
+}
+.workbench-shortcut-tile.is-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.workbench-shortcut-tile.is-disabled:hover {
+  transform: none;
+  border-color: #ebedf0;
+  background: #ffffff;
+  box-shadow: none;
+}
+.workbench-shortcut-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #e6f0ff, #d6e4ff);
+  color: #1677ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.workbench-shortcut-label {
+  display: block;
+  font-weight: 600;
+  color: #1f2329;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+.workbench-shortcut-hint {
+  display: block;
+  font-size: 12px;
+  color: #8c8c8c;
+}
+.workbench-shortcut-arrow {
+  margin-left: auto;
+  color: #c7ccd4;
+  font-size: 12px;
+}
+.workbench-shortcut-tile:hover .workbench-shortcut-arrow {
+  color: #1677ff;
+}
+
+/* ===================== 列表单元格统一不换行 ===================== */
+.ant-table-tbody > tr > td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* 对 Tag 集合 / 多行内容例外：包含 ant-space-wrap 的列允许换行 */
+.ant-table-tbody > tr > td:has(.ant-space-wrap),
+.ant-table-tbody > tr > td:has(.ant-tag) {
+  white-space: normal;
+}
+/* 锁定固定列阴影 */
+.ant-table-cell-fix-left::after {
+  box-shadow: inset 6px 0 4px -4px rgba(0, 0, 0, 0.04);
+}
+.ant-table-cell-fix-right::after {
+  box-shadow: inset -6px 0 4px -4px rgba(0, 0, 0, 0.04);
 }

@@ -49,7 +49,7 @@ public class UserQueryController extends BaseController {
         dto.role = param.role;
         dto.pageNo = param.pageNo;
         dto.pageSize = param.pageSize;
-        dto.operatorId = getCurrentUserId();
+        dto.operatorCode = getCurrentUserCode();
         PageResultDTO<UserDTO> result = userQueryService.page(dto);
         UserPageVO vo = new UserPageVO();
         vo.total = result.total;
@@ -69,7 +69,7 @@ public class UserQueryController extends BaseController {
     public Result<UserVO> detail(UserDetailParam param) {
         UserDetailParamDTO dto = new UserDetailParamDTO();
         dto.userNum = param.userNum;
-        dto.operatorId = getCurrentUserId();
+        dto.operatorCode = getCurrentUserCode();
         UserDTO result = userQueryService.detail(dto);
         return Result.ok(toUserVO(result));
     }
@@ -82,7 +82,7 @@ public class UserQueryController extends BaseController {
     @GetMapping("/roles/options")
     public Result<List<UserRoleVO>> roleOptions() {
         RoleOptionsParamDTO dto = new RoleOptionsParamDTO();
-        dto.operatorId = getCurrentUserId();
+        dto.operatorCode = getCurrentUserCode();
         List<UserRoleDTO> result = userQueryService.roleOptions(dto);
         List<UserRoleVO> vos = new ArrayList<>();
         for (UserRoleDTO role : result) {
@@ -104,7 +104,7 @@ public class UserQueryController extends BaseController {
     public Result<List<UserRoleVO>> userRoles(String userNum) {
         UserRoleQueryParamDTO dto = new UserRoleQueryParamDTO();
         dto.userNum = userNum;
-        dto.operatorId = getCurrentUserId();
+        dto.operatorCode = getCurrentUserCode();
         List<UserRoleDTO> result = userQueryService.userRoles(dto);
         List<UserRoleVO> vos = new ArrayList<>();
         for (UserRoleDTO role : result) {

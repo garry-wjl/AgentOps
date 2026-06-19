@@ -66,7 +66,7 @@ public class AuthCommandService {
             throw new BusinessException("ACCOUNT_OR_PASSWORD_ERROR", "账号或密码错误");
         }
         LoginResultDTO result = new LoginResultDTO();
-        result.accessToken = tokenProvider.createAccessToken(user.id, user.num);
+        result.accessToken = tokenProvider.createAccessToken(user.num);
         result.tokenType = "Bearer";
         result.expiresIn = 7200L;
         // 装配当前登录用户信息，避免前端拿不到 user 字段后陷入加载态
@@ -88,7 +88,7 @@ public class AuthCommandService {
      */
     public void logout(LogoutParamDTO param) {
         Assert.notNull(param, "退出登录参数不能为空");
-        Assert.notNull(param.operatorId, "操作人不能为空");
+        Assert.notBlank(param.operatorCode, "操作人不能为空");
         Assert.notBlank(param.token, "访问令牌不能为空");
         tokenProvider.revoke(param.token);
     }

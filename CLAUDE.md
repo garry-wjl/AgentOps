@@ -25,29 +25,31 @@ agentops/
 ├── frontend/                        # React + TypeScript
 │   ├── public/
 │   ├── src/
-│   │   ├── api/                     # Axios API client
+│   │   ├── api/                     # Axios API client（按领域拆：agent/model/prompt/sandbox/skill/space/system/tool/user/auth.ts）
 │   │   ├── assets/                  # Static assets
-│   │   ├── components/              # Shared UI components
+│   │   ├── components/              # Shared UI components（如 PageBreadcrumb）
 │   │   ├── hooks/                   # Custom React hooks
-│   │   ├── layouts/                 # Layout components
+│   │   ├── layouts/                 # Layout components（PlatformLayout、SpaceLayout、BrandHeader）
 │   │   ├── locales/                 # i18n (zh-CN, en-US)
 │   │   ├── pages/                   # Page components
-│   │   │   ├── spaces/              # Space-level resource pages
-│   │   │   │   ├── dashboard/
-│   │   │   │   ├── models/
-│   │   │   │   ├── agents/
-│   │   │   │   ├── agent-runtime/
-│   │   │   │   ├── prompts/
-│   │   │   │   ├── skills/
-│   │   │   │   ├── tools/
-│   │   │   │   ├── members/
-│   │   │   │   └── settings/
-│   │   │   ├── users/               # Platform-level user management
-│   │   │   └── system-settings/     # Platform-level system settings
+│   │   │   ├── Login/               # 登录
+│   │   │   ├── Forbidden/           # 403
+│   │   │   ├── platform/            # 平台级（SpaceLayout 之外）
+│   │   │   │   ├── workbench/       # 平台工作台
+│   │   │   │   ├── spaces/          # 空间管理（SpaceListPage + SpaceEditPage）
+│   │   │   │   ├── users/           # 用户管理
+│   │   │   │   └── system-settings/ # 系统设置
+│   │   │   └── spaces/              # 空间内（带 :spaceId 的子页面）
+│   │   │       ├── agents/          # Agent 管理（Management + Edit）
+│   │   │       ├── models/          # 模型管理（Management + Edit）
+│   │   │       ├── prompts/         # Prompt 管理（Management + Detail + Edit）
+│   │   │       ├── sandboxes/       # 沙箱管理（Management + Edit）
+│   │   │       ├── skills/          # Skill 管理（Management + Edit）
+│   │   │       └── tools/           # 工具管理（Management + Edit + Test）
 │   │   ├── routes/                  # Route config (React Router)
-│   │   ├── stores/                  # Zustand stores
+│   │   ├── stores/                  # Zustand stores（authStore、spaceResourceStore）
 │   │   ├── types/                   # TypeScript definitions
-│   │   └── utils/                   # Utility functions
+│   │   └── utils/                   # Utility functions（request、listCell）
 │   ├── index.html
 │   ├── package.json
 │   ├── tsconfig.json
@@ -163,3 +165,30 @@ The following Claude Code skills are available for this project:
 - All cross-cutting concerns (logging, auth, rate limiting) handled in adapter layer
 - Frontend-backend communication via RESTful JSON API
 - Use `/` slash commands for specialized tasks
+
+## Frontend ↔ Backend Integration Status (2026-06-16)
+
+后端 108 个接口 ↔ 前端 108 个 API 客户端，**0 缺失 / 0 多余**。对照方式：grep 后端 `*Controller.java` 的 `@RequestMapping`+`@*Mapping` 路径集合，与 `frontend/src/api/*.ts` 中 `url:` 字符串集合做 diff。
+
+| 领域 | 后端接口数 | 前端封装数 | 状态 |
+|---|---|---|---|
+| Auth | 3 | 3 | ✅ |
+| Space | 9 | 9 | ✅ |
+| User | 12 | 12 | ✅ |
+| Model | 8 | 8 | ✅ |
+| Prompt | 10 | 10 | ✅ |
+| Skill（含 version / resource） | 17 | 17 | ✅ |
+| Tool | 10 | 10 | ✅ |
+| Agent（含 version） | 15 | 15 | ✅ |
+| Sandbox | 8 | 8 | ✅ |
+| System / AuditLog | 11 | 11 | ✅ |
+
+**前端约定（涉及接口对接的页面统一遵守）：**
+- **禁止使用 Ant Design `Drawer` 弹出**做新建/编辑；所有新建/编辑改为独立全页（`/new`、`/:num/edit`、详情页 `/:num`），通过 React Router 跳转
+- **列表 URL 参数使用业务编码**（`:num`，对应后端 `DTO.num`）；**禁止**用 mock 时代的 `:id` 自增主键
+- **删除按钮**仅在 `r.status === 'DRAFT' &&` 时渲染，与后端 `Assert.isTrue(status == DRAFT, "仅草稿态可删除")` 对齐
+- **新建/编辑页顶部必须有面包屑**（用 `<PageBreadcrumb>` 组件），位于灰色背景区，**白卡外**；删除原"返回XXX列表"按钮
+- **状态枚举命名**严格按后端：`Space/Model/Prompt/Skill/Tool` → `DRAFT/ENABLED|EFFECTIVE/DISABLED|WITHDRAWN`；`Sandbox` → `DRAFT/INITIALIZING/ONLINE/OFFLINE/DISABLED`；`Skill/Agent Version` → `DRAFT/ONLINE|EFFECTIVE/OFFLINE|WITHDRAWN`
+- **API 函数签名**优先对象参数（`createX(spaceCode, data: { ... })`），便于扩展；`num` 类型用 `string`（业务编码），不用数字
+
+**接口对照表**位于 `doc/2026-06-16_前后端接口对照表.md`（每次新加领域或接口时同步更新）。

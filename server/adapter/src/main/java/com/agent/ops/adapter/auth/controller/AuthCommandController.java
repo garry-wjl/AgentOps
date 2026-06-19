@@ -61,7 +61,7 @@ public class AuthCommandController extends BaseController {
     public Result<Boolean> logout(@RequestBody @Valid LogoutParam param) {
         LogoutParamDTO dto = new LogoutParamDTO();
         dto.token = param.token;
-        dto.operatorId = getCurrentUserId();
+        dto.operatorCode = getCurrentUserCode();
         authCommandService.logout(dto);
         return Result.ok(Boolean.TRUE);
     }

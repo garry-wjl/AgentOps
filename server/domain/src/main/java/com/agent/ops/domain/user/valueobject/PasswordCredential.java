@@ -41,10 +41,10 @@ public class PasswordCredential {
      * 重置密码哈希值。
      *
      * @param passwordHash 新密码哈希值
-     * @param operatorId 当前操作人标识
+     * @param operatorCode 当前操作人标识
      */
-    public void reset(String passwordHash, Long operatorId) {
-        Assert.notNull(operatorId, "操作人不能为空");
+    public void reset(String passwordHash, String operatorCode) {
+        Assert.notBlank(operatorCode, "操作人不能为空");
         Assert.notBlank(passwordHash, "密码哈希不能为空");
         this.passwordHash = passwordHash;
         this.passwordSet = Boolean.TRUE;
@@ -53,10 +53,10 @@ public class PasswordCredential {
     /**
      * 校验用户是否已经设置密码。
      *
-     * @param operatorId 当前操作人标识
+     * @param operatorCode 当前操作人标识
      */
-    public void assertPasswordSet(Long operatorId) {
-        Assert.notNull(operatorId, "操作人不能为空");
+    public void assertPasswordSet(String operatorCode) {
+        Assert.notBlank(operatorCode, "操作人不能为空");
         Assert.isTrue(Boolean.TRUE.equals(passwordSet), "账号未设置密码，请联系管理员");
     }
 

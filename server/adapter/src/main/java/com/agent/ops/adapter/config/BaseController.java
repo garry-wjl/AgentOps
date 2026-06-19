@@ -1,17 +1,13 @@
 package com.agent.ops.adapter.config;
 
+import cn.hutool.core.util.StrUtil;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
- * 控制器基类，提供从请求属性中获取操作人标识的能力。
+ * 控制器基类，提供从请求属性中获取当前用户业务编码的能力。
  */
 public class BaseController {
-    /**
-     * 存储操作人标识的请求属性名称。
-     */
-    private static final String ATTR_OPERATOR_ID = "operatorId";
-
     /**
      * HTTP 请求对象。
      */
@@ -19,13 +15,13 @@ public class BaseController {
     protected HttpServletRequest request;
 
     /**
-     * 获取当前请求的操作人标识。
+     * 获取当前请求的用户业务编码（user.num）。
      *
-     * @return 操作人标识
+     * @return 当前用户业务编码，未登录时返回 null
      */
-    protected Long getCurrentUserId() {
-        Object attr = request.getAttribute(ATTR_OPERATOR_ID);
-        return attr instanceof Long ? (Long) attr : null;
+    protected String getCurrentUserCode() {
+        Object attr = request.getAttribute(TokenAuthInterceptor.ATTR_CURRENT_USER_CODE);
+        return attr instanceof String value && StrUtil.isNotBlank(value) ? value : null;
     }
 
     /**
@@ -34,6 +30,6 @@ public class BaseController {
      * @return 是否已认证
      */
     protected boolean isLogin() {
-        return getCurrentUserId() != null;
+        return getCurrentUserCode() != null;
     }
 }

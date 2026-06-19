@@ -22,5 +22,5 @@ public class ResetPasswordParamDTO {
     /**
      * 操作人标识。
      */
-    public Long operatorId;
+    public String operatorCode;
 }

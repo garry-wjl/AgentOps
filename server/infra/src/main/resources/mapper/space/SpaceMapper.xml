@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.agent.ops.infra.space.mapper.SpaceMapper">
+
+    <resultMap id="SpaceEntityMap" type="com.agent.ops.infra.space.entity.SpaceEntity">
+        <id column="id" property="id"/>
+        <result column="num" property="num"/>
+        <result column="name" property="name"/>
+        <result column="description" property="description"/>
+        <result column="icon_url" property="iconUrl"/>
+        <result column="owner_user_code" property="ownerUserCode"/>
+        <result column="status" property="status"/>
+        <result column="admin_user_codes" property="adminUserCodes"/>
+        <result column="member_user_codes" property="memberUserCodes"/>
+        <result column="create_no" property="createNo"/>
+        <result column="update_no" property="updateNo"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+    <!-- 分页查询：当前用户在 admin 或 member 列表中的空间 -->
+    <select id="pageContaining" resultMap="SpaceEntityMap">
+        SELECT *
+        FROM spaces
+        WHERE is_deleted = 0
+          AND (
+            JSON_CONTAINS(admin_user_codes, JSON_QUOTE(#{userCode}))
+            OR JSON_CONTAINS(member_user_codes, JSON_QUOTE(#{userCode}))
+          )
+          <if test="keyword != null and keyword != ''">
+            AND name LIKE CONCAT('%', #{keyword}, '%')
+          </if>
+        ORDER BY update_time DESC
+    </select>
+
+</mapper>
