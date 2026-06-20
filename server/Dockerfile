@@ -1,26 +1,8 @@
-FROM maven:3.9-eclipse-temurin-21 AS build
+FROM docker.1ms.run/library/eclipse-temurin:21-jre
 
 WORKDIR /app
 
-COPY pom.xml ./
-COPY adapter/pom.xml ./adapter/
-COPY application/pom.xml ./application/
-COPY client/pom.xml ./client/
-COPY domain/pom.xml ./domain/
-COPY facade/pom.xml ./facade/
-COPY infrastructure/pom.xml ./infrastructure/
-
-RUN mvn dependency:go-offline -B
-
-COPY . .
-
-RUN mvn clean package -DskipTests -B
-
-FROM eclipse-temurin:21-jre
-
-WORKDIR /app
-
-COPY --from=build /app/adapter/target/adapter-*.jar ./app.jar
+COPY adapter/target/*.jar ./app.jar
 
 EXPOSE 8080
 
