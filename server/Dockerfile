@@ -2,7 +2,7 @@ FROM docker.1ms.run/library/eclipse-temurin:21-jre
 
 WORKDIR /app
 
-COPY server/adapter/target/*.jar ./app.jar
+COPY adapter/target/*.jar ./app.jar
 
 EXPOSE 8080
 
