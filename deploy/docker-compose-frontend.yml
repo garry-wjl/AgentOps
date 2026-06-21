@@ -1,0 +1,8 @@
+services:
+  frontend:
+    image: registry.cn-shenzhen.aliyuncs.com/garry-ai/agent-ops-frontend:${FRONTEND_IMAGE_TAG:-latest}
+    container_name: agentops-frontend
+    ports:
+      - "80:80"
+    init: true
+    restart: always
