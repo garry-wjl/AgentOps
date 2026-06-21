@@ -9,7 +9,7 @@ services:
       - agentops-net
 
   backend:
-    image: ${BACKEND_IMAGE:-agentops-backend:latest}
+    image: registry.cn-shenzhen.aliyuncs.com/garry-ai/agent-ops-server:${SERVER_IMAGE_TAG:-latest}
     container_name: agentops-backend
     ports:
       - "8080:8080"
@@ -31,7 +31,7 @@ services:
       - agentops-net
 
   frontend:
-    image: ${FRONTEND_IMAGE:-agentops-frontend:latest}
+    image: registry.cn-shenzhen.aliyuncs.com/garry-ai/agent-ops-frontend:${FRONTEND_IMAGE_TAG:-latest}
     container_name: agentops-frontend
     ports:
       - "80:80"
