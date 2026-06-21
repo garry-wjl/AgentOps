@@ -1,0 +1,35 @@
+services:
+  redis:
+    image: redis:7
+    container_name: agentops-redis
+    ports:
+      - "6379:6379"
+    restart: always
+    networks:
+      - agentops-net
+
+  backend:
+    image: registry.cn-shenzhen.aliyuncs.com/garry-ai/agent-ops-server:${SERVER_IMAGE_TAG:-latest}
+    container_name: agentops-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-agent_ops}
+      DB_USER: ${DB_USER:-root}
+      DB_PASS: ${DB_PASS}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      redis:
+        condition: service_started
+    stop_grace_period: 30s
+    restart: always
+    networks:
+      - agentops-net
+
+networks:
+  agentops-net:
+    driver: bridge
