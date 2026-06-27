@@ -30,18 +30,6 @@ services:
     networks:
       - agentops-net
 
-  frontend:
-    image: registry.cn-shenzhen.aliyuncs.com/garry-ai/agent-ops-frontend:${FRONTEND_IMAGE_TAG:-latest}
-    container_name: agentops-frontend
-    ports:
-      - "80:80"
-    init: true
-    depends_on:
-      - backend
-    restart: always
-    networks:
-      - agentops-net
-
 networks:
   agentops-net:
     driver: bridge
