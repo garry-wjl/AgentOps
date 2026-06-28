@@ -4,8 +4,6 @@ services:
     container_name: agentops-frontend
     ports:
       - "80:80"
-    environment:
-      BACKEND_HOST: ${BACKEND_HOST:-backend}
     init: true
     restart: always
     deploy:
